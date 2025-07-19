@@ -24,8 +24,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const gameId = urlParams.get('game');
     
     if (gameId) {
-        document.getElementById('joinGameId').value = gameId;
         document.getElementById('existingGameId').value = gameId;
+        // Try to load existing game
+        loadGame(gameId);
     }
     
     // Set up event listeners
@@ -36,30 +37,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function setupEventListeners() {
-    // Create game form
-    createGameForm.addEventListener('submit', handleCreateGame);
-    
-    // Join game form
-    joinGameForm.addEventListener('submit', handleJoinGame);
-    
-    // Join existing game form
-    joinExistingForm.addEventListener('submit', handleJoinExistingGame);
-    
-    // Game setup form
-    gameSetupForm.addEventListener('submit', handleGameSetup);
-    
-    // Score input form
-    scoreInputForm.addEventListener('submit', handleScoreSubmit);
-    
-    // Add player form
-    document.getElementById('addPlayerForm').addEventListener('submit', handleAddPlayer);
-    
-    // Collapsible sections
-    document.getElementById('addPlayerToggle').addEventListener('click', toggleAddPlayerSection);
-    
-    // Share button
-    shareButton.addEventListener('click', shareGame);
-    
     // Color selection
     setupColorSelection();
 }
@@ -94,143 +71,66 @@ function selectColor(color) {
             }
         });
     }
-    
-    // Enable join button if color is selected
-    const joinButton = document.querySelector('#joinGameForm button[type="submit"]');
-    if (joinButton) {
-        joinButton.disabled = false;
-    }
 }
 
-async function handleCreateGame(e) {
-    e.preventDefault();
-    
+function createGame() {
     const gameId = Math.random().toString(36).substring(2, 8).toUpperCase();
     
-    try {
-        const response = await fetch('/api/games', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                gameId: gameId,
-                playerName: 'Host',
-                trainColor: 'red'
-            })
-        });
-        
-        if (response.ok) {
-            currentGame = await response.json();
-            currentPlayer = currentGame.players[0];
-            
-            showGameSetup();
-            updateGameStatus();
-        } else {
-            alert('Failed to create game');
-        }
-    } catch (error) {
-        console.error('Error creating game:', error);
-        alert('Failed to create game');
-    }
+    currentGame = {
+        id: gameId,
+        players: [],
+        rounds: [],
+        createdAt: new Date().toISOString()
+    };
+    
+    // Save to localStorage
+    saveGame(currentGame);
+    
+    showGameSetup();
+    updateGameStatus();
+    
+    showMessage('Game created successfully!', 'success');
 }
 
-async function handleJoinGame(e) {
-    e.preventDefault();
-    
-    const gameId = document.getElementById('joinGameId').value.trim();
-    const playerName = document.getElementById('joinPlayerName').value.trim();
-    const selectedColor = document.querySelector('.color-option.selected');
-    
-    if (!selectedColor) {
-        alert('Please select a train color');
-        return;
-    }
-    
-    const trainColor = selectedColor.dataset.color;
-    
-    try {
-        // First, get the game to check if it exists
-        const getResponse = await fetch(`/api/games/${gameId}`);
-        if (!getResponse.ok) {
-            alert('Game not found');
-            return;
-        }
-        
-        currentGame = await getResponse.json();
-        
-        // Add the player to the game
-        const addResponse = await fetch(`/api/games/${gameId}/players`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                playerName: playerName,
-                trainColor: trainColor
-            })
-        });
-        
-        if (addResponse.ok) {
-            const newPlayer = await addResponse.json();
-            currentPlayer = newPlayer;
-            currentGame.players.push(newPlayer);
-            
-            showGameSetup();
-            updateGameStatus();
-        } else {
-            alert('Failed to join game');
-        }
-    } catch (error) {
-        console.error('Error joining game:', error);
-        alert('Failed to join game');
-    }
-}
-
-async function handleJoinExistingGame(e) {
-    e.preventDefault();
-    
+function joinExistingGame() {
     const gameId = document.getElementById('existingGameId').value.trim();
     
     if (!gameId) {
-        alert('Please enter a game ID');
+        showMessage('Please enter a Game ID', 'error');
         return;
     }
     
-    try {
-        const response = await fetch(`/api/games/${gameId}`);
-        if (response.ok) {
-            currentGame = await response.json();
-            showGameSetup();
-            updateGameStatus();
-        } else {
-            alert('Game not found');
-        }
-    } catch (error) {
-        console.error('Error joining existing game:', error);
-        alert('Failed to join game');
+    if (loadGame(gameId)) {
+        showGameSetup();
+        updateGameStatus();
+        showMessage('Game loaded successfully!', 'success');
+    } else {
+        showMessage('Game not found', 'error');
     }
 }
 
-async function handleGameSetup(e) {
-    e.preventDefault();
-    
+function setupPlayer() {
     const playerName = document.getElementById('setupPlayerName').value.trim();
     const selectedColor = document.querySelector('.color-option.selected');
     
+    if (!playerName) {
+        showMessage('Please enter your name', 'error');
+        return;
+    }
+    
     if (!selectedColor) {
-        alert('Please select a train color');
+        showMessage('Please select a train color', 'error');
         return;
     }
     
     const trainColor = selectedColor.dataset.color;
     
     if (!currentGame) {
-        alert('No game found');
+        showMessage('No game found', 'error');
         return;
     }
     
-    // Update current player info
+    // Create current player
     currentPlayer = {
         id: `player_${Date.now()}`,
         name: playerName,
@@ -239,67 +139,76 @@ async function handleGameSetup(e) {
         isOffline: false
     };
     
-    // Update the first player in the game
-    currentGame.players[0] = currentPlayer;
+    // Add player to game
+    currentGame.players.push(currentPlayer);
+    
+    // Save game
+    saveGame(currentGame);
     
     showGameInterface();
     updateGameStatus();
+    showMessage('Player setup complete!', 'success');
 }
 
-async function handleAddPlayer(e) {
-    e.preventDefault();
-    
+function addPlayer() {
     const playerName = document.getElementById('addPlayerName').value.trim();
-    const selectedColor = document.querySelector('.color-option.selected');
+    const selectedColor = document.querySelector('#addPlayerColorGrid .color-option.selected');
+    
+    if (!playerName) {
+        showMessage('Please enter a player name', 'error');
+        return;
+    }
     
     if (!selectedColor) {
-        alert('Please select a train color');
+        showMessage('Please select a color', 'error');
         return;
     }
     
     const trainColor = selectedColor.dataset.color;
     
     if (!currentGame) {
-        alert('No game found');
+        showMessage('No game found', 'error');
         return;
     }
     
-    try {
-        const response = await fetch(`/api/games/${currentGame.id}/players`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                playerName: playerName,
-                trainColor: trainColor
-            })
-        });
-        
-        if (response.ok) {
-            const newPlayer = await response.json();
-            currentGame.players.push(newPlayer);
-            
-            // Clear form
-            document.getElementById('addPlayerName').value = '';
-            document.querySelector('.color-option.selected')?.classList.remove('selected');
-            
-            updateGameStatus();
-            updateScoreInputForm();
-        } else {
-            alert('Failed to add player');
-        }
-    } catch (error) {
-        console.error('Error adding player:', error);
-        alert('Failed to add player');
+    // Check if name already exists
+    if (currentGame.players.some(p => p.name.toLowerCase() === playerName.toLowerCase())) {
+        showMessage('A player with this name already exists', 'error');
+        return;
     }
+    
+    // Check if color is already taken
+    if (currentGame.players.some(p => p.trainColor === trainColor)) {
+        showMessage('This color is already taken', 'error');
+        return;
+    }
+    
+    const newPlayer = {
+        id: `offline_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+        name: playerName,
+        trainColor: trainColor,
+        scores: [],
+        isOffline: true
+    };
+    
+    currentGame.players.push(newPlayer);
+    
+    // Save game
+    saveGame(currentGame);
+    
+    // Clear form
+    document.getElementById('addPlayerName').value = '';
+    document.querySelector('#addPlayerColorGrid .color-option.selected')?.classList.remove('selected');
+    
+    updateGameStatus();
+    updateScoreInputForm();
+    updateAddPlayerColors();
+    showMessage(`Added ${playerName} to the game!`, 'success');
 }
 
-async function handleScoreSubmit(e) {
-    e.preventDefault();
-    
+function submitScores() {
     if (!currentGame) {
-        alert('No game found');
+        showMessage('No game found', 'error');
         return;
     }
     
@@ -316,45 +225,35 @@ async function handleScoreSubmit(e) {
         });
     });
     
-    try {
-        const response = await fetch(`/api/games/${currentGame.id}/scores`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                roundNumber: roundNumber,
-                scores: scores
-            })
-        });
-        
-        if (response.ok) {
-            const round = await response.json();
-            currentGame.rounds.push(round);
-            
-            // Update player scores
-            scores.forEach(scoreEntry => {
-                const player = currentGame.players.find(p => p.id === scoreEntry.playerId);
-                if (player) {
-                    player.scores.push(scoreEntry.score);
-                }
-            });
-            
-            // Clear form
-            currentGame.players.forEach(player => {
-                const scoreInput = document.getElementById(`score-${player.id}`);
-                if (scoreInput) scoreInput.value = '';
-            });
-            
-            updateScoreChart();
-            updateGameStatus();
-        } else {
-            alert('Failed to submit scores');
+    // Add round
+    const round = {
+        roundNumber: roundNumber,
+        scores: scores,
+        timestamp: new Date().toISOString()
+    };
+    
+    currentGame.rounds.push(round);
+    
+    // Update player scores
+    scores.forEach(scoreEntry => {
+        const player = currentGame.players.find(p => p.id === scoreEntry.playerId);
+        if (player) {
+            player.scores.push(scoreEntry.score);
         }
-    } catch (error) {
-        console.error('Error submitting scores:', error);
-        alert('Failed to submit scores');
-    }
+    });
+    
+    // Save game
+    saveGame(currentGame);
+    
+    // Clear form
+    currentGame.players.forEach(player => {
+        const scoreInput = document.getElementById(`score-${player.id}`);
+        if (scoreInput) scoreInput.value = '';
+    });
+    
+    updateScoreChart();
+    updateGameStatus();
+    showMessage(`Round ${roundNumber} scores submitted!`, 'success');
 }
 
 function showGameSetup() {
@@ -375,12 +274,13 @@ function showGameInterface() {
     document.getElementById('gameInterface').style.display = 'block';
     
     // Update game ID display
-    gameIdDisplay.textContent = currentGame.id;
+    document.getElementById('gameIdDisplay').textContent = currentGame.id;
     
     // Update forms and charts
     updateScoreInputForm();
     updateScoreChart();
     updateGameStatus();
+    updateAddPlayerColors();
 }
 
 function updateAvailableColors() {
@@ -394,6 +294,35 @@ function updateAvailableColors() {
         } else {
             button.disabled = false;
             button.classList.remove('taken');
+        }
+    });
+}
+
+function updateAddPlayerColors() {
+    const colorGrid = document.getElementById('addPlayerColorGrid');
+    colorGrid.innerHTML = '';
+    
+    const takenColors = currentGame ? currentGame.players.map(p => p.trainColor) : [];
+    
+    trainColors.forEach(color => {
+        if (!takenColors.includes(color)) {
+            const colorOption = document.createElement('div');
+            colorOption.className = 'color-option';
+            colorOption.dataset.color = color;
+            colorOption.innerHTML = `
+                <input type="radio" name="addPlayerColor" value="${color}">
+                <div class="color-dot ${color}"></div>
+                <span>${color.charAt(0).toUpperCase() + color.slice(1)}</span>
+            `;
+            
+            colorOption.addEventListener('click', function() {
+                document.querySelectorAll('#addPlayerColorGrid .color-option').forEach(btn => {
+                    btn.classList.remove('selected');
+                });
+                this.classList.add('selected');
+            });
+            
+            colorGrid.appendChild(colorOption);
         }
     });
 }
@@ -510,6 +439,8 @@ function updateGameStatus() {
     
     document.getElementById('availableColors').textContent = availableColors.join(', ');
     document.getElementById('currentPlayers').innerHTML = playersList;
+    document.getElementById('playerCount').textContent = currentGame.players.length;
+    document.getElementById('currentRound').textContent = currentGame.rounds.length + 1;
 }
 
 function toggleAddPlayerSection() {
@@ -518,10 +449,10 @@ function toggleAddPlayerSection() {
     
     if (section.style.display === 'none' || !section.style.display) {
         section.style.display = 'block';
-        toggle.innerHTML = '<i class="fas fa-chevron-up"></i> Hide Add Player';
+        toggle.innerHTML = '<i class="fas fa-chevron-up"></i>';
     } else {
         section.style.display = 'none';
-        toggle.innerHTML = '<i class="fas fa-chevron-down"></i> Add Another Player';
+        toggle.innerHTML = '<i class="fas fa-chevron-down"></i>';
     }
 }
 
@@ -536,7 +467,7 @@ function shareGame() {
         });
     } else if (navigator.clipboard) {
         navigator.clipboard.writeText(gameUrl).then(() => {
-            alert('Game link copied to clipboard!');
+            showMessage('Game link copied to clipboard!', 'success');
         });
     } else {
         // Fallback
@@ -546,7 +477,7 @@ function shareGame() {
         textArea.select();
         document.execCommand('copy');
         document.body.removeChild(textArea);
-        alert('Game link copied to clipboard!');
+        showMessage('Game link copied to clipboard!', 'success');
     }
 }
 
@@ -570,4 +501,38 @@ function initializeChart() {
             }
         }
     });
+}
+
+// LocalStorage functions
+function saveGame(game) {
+    localStorage.setItem(`traintally_game_${game.id}`, JSON.stringify(game));
+}
+
+function loadGame(gameId) {
+    const gameData = localStorage.getItem(`traintally_game_${gameId}`);
+    if (gameData) {
+        currentGame = JSON.parse(gameData);
+        return true;
+    }
+    return false;
+}
+
+function showMessage(message, type) {
+    // Remove existing messages
+    const existingMessages = document.querySelectorAll('.success, .error');
+    existingMessages.forEach(msg => msg.remove());
+    
+    // Create new message
+    const messageDiv = document.createElement('div');
+    messageDiv.className = type;
+    messageDiv.textContent = message;
+    
+    // Insert at top of container
+    const container = document.querySelector('.container');
+    container.insertBefore(messageDiv, container.firstChild);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        messageDiv.remove();
+    }, 5000);
 } 

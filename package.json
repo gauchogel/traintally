@@ -1,20 +1,15 @@
 {
   "name": "tally-train",
   "version": "1.0.0",
-  "description": "Real-time Mexican Train score tracking web application for friends playing together",
-  "main": "index.js",
+  "description": "Mexican Train score tracking web application for friends playing together",
+  "main": "public/index.html",
   "scripts": {
-    "start": "node index.js",
-    "build": "echo 'Static build completed - serving from public directory'",
+    "build": "echo 'Static site - no build required'",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": ["mexican train", "score tracker", "game", "dominoes"],
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5"
-  },
   "engines": {
     "node": ">=16.0.0"
   }
