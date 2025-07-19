@@ -1,61 +1,71 @@
-# 🚂 Mexican Train Score Tracker
+# Tally Train - Mexican Train Score Tracker
 
-A real-time web application for tracking Mexican Train domino game scores with friends in the same room.
+A simple, static web application for tracking Mexican Train domino game scores with friends.
 
 ## Features
 
-- **Real-time Updates**: All players see score updates instantly
-- **Game Rooms**: Create private game rooms with unique IDs
-- **Player Management**: Up to 8 players with custom train colors
-- **Score Tracking**: Enter scores for each round
-- **Visual Charts**: Stacked bar chart showing scores by round
-- **Mobile Friendly**: Responsive design works on phones and tablets
+- 🎮 **Game Creation**: Create new games with unique IDs
+- 👥 **Player Management**: Add up to 8 players with unique train colors
+- 🎨 **Color Selection**: 9 train colors (red, white, green, orange, brown, black, blue, pink, yellow)
+- 📊 **Score Tracking**: Enter scores for each round
+- 📈 **Visualization**: Chart.js integration for score visualization
+- 📱 **Responsive Design**: Works on desktop and mobile
+- 🔗 **Sharing**: Share game links with friends
+- 💾 **Local Storage**: Games persist in browser
 
-## How to Play
+## How to Use
 
-1. **Start the Server**: Run `npm start` to start the application
-2. **Create a Game**: Click "Create New Game Room" to generate a unique game ID
-3. **Share the Game ID**: Share the game ID with your friends
-4. **Join the Game**: Friends enter the game ID, their name, and select a train color
-5. **Track Scores**: Enter scores for each round (lower scores are better in Mexican Train!)
-6. **View Progress**: Watch the stacked bar chart update in real-time
+1. **Create a Game**: Click "Create Game" to start a new game
+2. **Set Up Players**: Enter your name and select a train color
+3. **Add Players**: Add friends who are playing but not on the app
+4. **Track Scores**: Enter scores for each round (lower is better in Mexican Train!)
+5. **View Progress**: See scores visualized in the chart
+6. **Share**: Share the game link with friends
 
-## Installation
+## Deployment
 
-1. Make sure you have Node.js installed
-2. Clone or download this project
-3. Run `npm install` to install dependencies
-4. Run `npm start` to start the server
-5. Open your browser to `http://localhost:3000`
+This is a static site that can be deployed to any static hosting service:
 
-## Game Rules (Mexican Train)
+- **Cloudflare Pages** (Recommended)
+- **Netlify**
+- **GitHub Pages**
+- **Vercel**
 
-- Each player has their own "train" (line of dominoes)
-- Players try to play dominoes on their train or the Mexican Train
-- If a player can't play, they draw a domino and their score increases
-- The goal is to have the lowest score at the end
-- The game typically ends when one player runs out of dominoes
+### Cloudflare Pages Deployment
+
+1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com)
+2. Navigate to "Pages"
+3. Create new project from Git
+4. Select repository: `gauchogel/traintally`
+5. Configure build settings:
+   - Framework preset: None
+   - Build command: (leave empty)
+   - Build output directory: `public`
+6. Deploy!
 
 ## Technical Details
 
-- **Backend**: Node.js with Express and Socket.IO
-- **Frontend**: Vanilla JavaScript with Chart.js for visualizations
-- **Real-time Communication**: WebSocket connections via Socket.IO
-- **Data Storage**: In-memory storage (games reset when server restarts)
+- **Frontend**: Pure HTML, CSS, JavaScript
+- **Data Storage**: Browser localStorage
+- **Charts**: Chart.js
+- **Icons**: Font Awesome
+- **No Dependencies**: Completely static
 
-## Usage Tips
+## Game Rules
 
-- Each player should use a different train color
-- Enter scores immediately after each round
-- The chart automatically updates for all players
-- Games are automatically cleaned up when all players leave
-- You can join a game by adding `?game=GAMEID` to the URL
+Mexican Train is a domino game where:
+- Players try to get rid of their dominoes
+- Lower scores are better
+- Each round, players count remaining dominoes as points
+- The game continues until someone reaches a target score (usually 100)
 
-## Troubleshooting
+## Browser Support
 
-- If the connection is lost, refresh the page
-- Make sure all players are using the same game ID
-- Check that the server is running on the correct port
-- Ensure all players are on the same network for local play
+Works in all modern browsers that support:
+- ES6 JavaScript
+- localStorage
+- CSS Grid and Flexbox
 
-Enjoy your Mexican Train games! 🎲 # traintally
+## License
+
+ISC License
