@@ -1,200 +1,119 @@
-console.log('Tally Train is starting up!');
-console.log('Hello from your new Node.js application!');
-
 const express = require('express');
-const http = require('http');
-const socketIo = require('socket.io');
-const cors = require('cors');
 const path = require('path');
+const cors = require('cors');
 
 const app = express();
-const server = http.createServer(app);
-const io = socketIo(server, {
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST"]
-  }
-});
+const PORT = process.env.PORT || 3000;
 
-// Middleware
+// Enable CORS
 app.use(cors());
-app.use(express.json());
+
+// Serve static files from the public directory
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Game state storage
+// Parse JSON bodies
+app.use(express.json());
+
+// In-memory storage for games (for demo purposes)
 const games = new Map();
 
-// Socket.IO connection handling
-io.on('connection', (socket) => {
-  console.log('User connected:', socket.id);
-
-  // Create a new game room
-  socket.on('createGame', (callback) => {
-    const gameId = Math.random().toString(36).substring(2, 8).toUpperCase();
-    games.set(gameId, {
-      id: gameId,
-      players: [],
-      rounds: [],
-      currentRound: 1,
-      maxPlayers: 8
-    });
-    socket.join(gameId);
-    callback({ gameId, game: games.get(gameId) });
-    console.log(`Game ${gameId} created`);
-  });
-
-  // Join a game room
-  socket.on('joinGame', ({ gameId, playerName, trainColor }, callback) => {
-    const game = games.get(gameId);
-    if (!game) {
-      callback({ error: 'Game not found' });
-      return;
-    }
-    
-    if (game.players.length >= game.maxPlayers) {
-      callback({ error: 'Game is full' });
-      return;
-    }
-
-    const player = {
-      id: socket.id,
-      name: playerName,
-      trainColor: trainColor,
-      scores: []
-    };
-
-    game.players.push(player);
-    socket.join(gameId);
-    socket.playerId = socket.id;
-    socket.gameId = gameId;
-    
-    io.to(gameId).emit('gameUpdate', game);
-    callback({ success: true, game });
-    console.log(`Player ${playerName} joined game ${gameId}`);
-  });
-
-  // Add scores for a round
-  socket.on('addRoundScores', ({ gameId, roundScores }, callback) => {
-    const game = games.get(gameId);
-    if (!game) {
-      callback({ error: 'Game not found' });
-      return;
-    }
-
-    // Validate scores
-    const validScores = game.players.map(player => {
-      const score = roundScores.find(s => s.playerId === player.id);
-      return {
-        playerId: player.id,
-        playerName: player.name,
-        score: score ? parseInt(score.score) || 0 : 0
-      };
-    });
-
-    game.rounds.push({
-      roundNumber: game.currentRound,
-      scores: validScores
-    });
-
-    // Update player total scores
-    game.players.forEach(player => {
-      const roundScore = validScores.find(s => s.playerId === player.id);
-      player.scores.push(roundScore ? roundScore.score : 0);
-    });
-
-    game.currentRound++;
-    
-    io.to(gameId).emit('gameUpdate', game);
-    callback({ success: true, game });
-    console.log(`Round ${game.currentRound - 1} scores added to game ${gameId}`);
-  });
-
-  // Add another player (for offline players)
-  socket.on('addOtherPlayer', ({ gameId, playerName, trainColor }, callback) => {
-    console.log('addOtherPlayer called:', { gameId, playerName, trainColor });
-    
-    const game = games.get(gameId);
-    if (!game) {
-      console.log('Game not found:', gameId);
-      callback({ error: 'Game not found' });
-      return;
-    }
-    
-    if (game.players.length >= game.maxPlayers) {
-      console.log('Game is full:', game.players.length);
-      callback({ error: 'Game is full' });
-      return;
-    }
-
-    // Check if color is already taken
-    const colorTaken = game.players.some(player => player.trainColor === trainColor);
-    if (colorTaken) {
-      console.log('Color already taken:', trainColor);
-      callback({ error: 'This color is already taken' });
-      return;
-    }
-
-    // Check if name is already taken
-    const nameTaken = game.players.some(player => player.name.toLowerCase() === playerName.toLowerCase());
-    if (nameTaken) {
-      console.log('Name already taken:', playerName);
-      callback({ error: 'A player with this name already exists' });
-      return;
-    }
-
-    // Create offline player
-    const offlinePlayer = {
-      id: `offline_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`,
-      name: playerName,
-      trainColor: trainColor,
-      scores: [],
-      isOffline: true
-    };
-
-    game.players.push(offlinePlayer);
-    
-    console.log('Offline player added successfully:', offlinePlayer);
-    console.log('Total players in game:', game.players.length);
-    
-    io.to(gameId).emit('gameUpdate', game);
-    callback({ success: true, game });
-    console.log(`Offline player ${playerName} added to game ${gameId}`);
-  });
-
-  // Disconnect handling
-  socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id);
-    if (socket.gameId) {
-      const game = games.get(socket.gameId);
-      if (game) {
-        game.players = game.players.filter(p => p.id !== socket.playerId);
-        if (game.players.length === 0) {
-          games.delete(socket.gameId);
-          console.log(`Game ${socket.gameId} deleted (no players left)`);
-        } else {
-          io.to(socket.gameId).emit('gameUpdate', game);
-        }
-      }
-    }
-  });
-});
-
-// API routes
+// API Routes
 app.get('/api/games/:gameId', (req, res) => {
-  const game = games.get(req.params.gameId);
-  if (game) {
+    const gameId = req.params.gameId;
+    const game = games.get(gameId);
+    
+    if (!game) {
+        return res.status(404).json({ error: 'Game not found' });
+    }
+    
     res.json(game);
-  } else {
-    res.status(404).json({ error: 'Game not found' });
-  }
 });
 
-// Serve the main page
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+app.post('/api/games', (req, res) => {
+    const { gameId, playerName, trainColor } = req.body;
+    
+    if (!gameId || !playerName || !trainColor) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+    
+    const game = {
+        id: gameId,
+        players: [{
+            id: `player_${Date.now()}`,
+            name: playerName,
+            trainColor: trainColor,
+            scores: [],
+            isOffline: false
+        }],
+        rounds: [],
+        createdAt: new Date().toISOString()
+    };
+    
+    games.set(gameId, game);
+    console.log(`Game ${gameId} created with player ${playerName}`);
+    
+    res.json(game);
 });
 
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`Mexican Train Score Tracker running at http://localhost:${PORT}/`);
+app.post('/api/games/:gameId/players', (req, res) => {
+    const gameId = req.params.gameId;
+    const { playerName, trainColor } = req.body;
+    
+    const game = games.get(gameId);
+    if (!game) {
+        return res.status(404).json({ error: 'Game not found' });
+    }
+    
+    const newPlayer = {
+        id: `offline_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+        name: playerName,
+        trainColor: trainColor,
+        scores: [],
+        isOffline: true
+    };
+    
+    game.players.push(newPlayer);
+    console.log(`Offline player ${playerName} added to game ${gameId}`);
+    
+    res.json(newPlayer);
+});
+
+app.post('/api/games/:gameId/scores', (req, res) => {
+    const gameId = req.params.gameId;
+    const { roundNumber, scores } = req.body;
+    
+    const game = games.get(gameId);
+    if (!game) {
+        return res.status(404).json({ error: 'Game not found' });
+    }
+    
+    // Add round scores
+    const round = {
+        roundNumber: roundNumber,
+        scores: scores,
+        timestamp: new Date().toISOString()
+    };
+    
+    game.rounds.push(round);
+    
+    // Update player scores
+    scores.forEach(scoreEntry => {
+        const player = game.players.find(p => p.id === scoreEntry.playerId);
+        if (player) {
+            player.scores.push(scoreEntry.score);
+        }
+    });
+    
+    console.log(`Round ${roundNumber} scores added to game ${gameId}`);
+    res.json(round);
+});
+
+// Serve the main page for all routes (SPA)
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.listen(PORT, () => {
+    console.log(`Tally Train is starting up!`);
+    console.log(`Mexican Train Score Tracker running at http://localhost:${PORT}/`);
 }); 

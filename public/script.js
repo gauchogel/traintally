@@ -1,596 +1,573 @@
-// Socket.IO connection
-const socket = io();
-
 // Game state
 let currentGame = null;
-let scoreChart = null;
+let currentPlayer = null;
+
+// Train colors
+const trainColors = ['red', 'white', 'green', 'orange', 'brown', 'black', 'blue', 'pink', 'yellow'];
 
 // DOM elements
-const gameCreation = document.getElementById('gameCreation');
-const gameSetup = document.getElementById('gameSetup');
-const gameInfo = document.getElementById('gameInfo');
-const playersDisplay = document.getElementById('playersDisplay');
-const scoreInput = document.getElementById('scoreInput');
-const chartContainer = document.getElementById('chartContainer');
-
-// Color definitions - updated to match modern UI
-const colors = {
-    red: '#ef4444',
-    white: '#ffffff',
-    green: '#10b981',
-    orange: '#f97316',
-    brown: '#78716c',
-    black: '#374151',
-    blue: '#3b82f6',
-    pink: '#ec4899',
-    yellow: '#eab308'
-};
+const createGameForm = document.getElementById('createGameForm');
+const joinGameForm = document.getElementById('joinGameForm');
+const gameSetupForm = document.getElementById('gameSetupForm');
+const scoreInputForm = document.getElementById('scoreInputForm');
+const gameStatusSection = document.getElementById('gameStatusSection');
+const scoreChartSection = document.getElementById('scoreChartSection');
+const addPlayerSection = document.getElementById('addPlayerSection');
+const gameIdDisplay = document.getElementById('gameIdDisplay');
+const shareButton = document.getElementById('shareButton');
+const joinExistingForm = document.getElementById('joinExistingForm');
 
 // Initialize the application
-document.addEventListener('DOMContentLoaded', () => {
-    showMessage('Welcome to Mexican Train Score Tracker!', 'success');
-    setupColorSelection();
-    setupNewPlayerColorSelection();
+document.addEventListener('DOMContentLoaded', function() {
+    // Check for game ID in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const gameId = urlParams.get('game');
+    
+    if (gameId) {
+        document.getElementById('joinGameId').value = gameId;
+        document.getElementById('existingGameId').value = gameId;
+    }
+    
+    // Set up event listeners
+    setupEventListeners();
+    
+    // Initialize chart
+    initializeChart();
 });
 
-// Setup color selection functionality
+function setupEventListeners() {
+    // Create game form
+    createGameForm.addEventListener('submit', handleCreateGame);
+    
+    // Join game form
+    joinGameForm.addEventListener('submit', handleJoinGame);
+    
+    // Join existing game form
+    joinExistingForm.addEventListener('submit', handleJoinExistingGame);
+    
+    // Game setup form
+    gameSetupForm.addEventListener('submit', handleGameSetup);
+    
+    // Score input form
+    scoreInputForm.addEventListener('submit', handleScoreSubmit);
+    
+    // Add player form
+    document.getElementById('addPlayerForm').addEventListener('submit', handleAddPlayer);
+    
+    // Collapsible sections
+    document.getElementById('addPlayerToggle').addEventListener('click', toggleAddPlayerSection);
+    
+    // Share button
+    shareButton.addEventListener('click', shareGame);
+    
+    // Color selection
+    setupColorSelection();
+}
+
 function setupColorSelection() {
-    const colorOptions = document.querySelectorAll('.color-option');
-    const joinButton = document.querySelector('#gameSetup .btn');
+    const colorButtons = document.querySelectorAll('.color-option');
+    colorButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const color = this.dataset.color;
+            selectColor(color);
+        });
+    });
+}
+
+function selectColor(color) {
+    // Remove previous selection
+    document.querySelectorAll('.color-option').forEach(btn => {
+        btn.classList.remove('selected');
+        btn.disabled = false;
+    });
     
-    // Initially disable the join button
-    joinButton.disabled = true;
+    // Select new color
+    const selectedButton = document.querySelector(`[data-color="${color}"]`);
+    selectedButton.classList.add('selected');
     
-    colorOptions.forEach(option => {
-        option.addEventListener('click', function() {
-            if (!this.classList.contains('disabled')) {
-                // Remove selection from all options
-                colorOptions.forEach(opt => opt.classList.remove('selected'));
-                // Select this option
-                this.classList.add('selected');
-                // Check the radio button
-                const radio = this.querySelector('input[type="radio"]');
-                radio.checked = true;
-                
-                // Enable the join button when a color is selected
-                joinButton.disabled = false;
+    // Disable taken colors
+    if (currentGame) {
+        currentGame.players.forEach(player => {
+            const colorBtn = document.querySelector(`[data-color="${player.trainColor}"]`);
+            if (colorBtn && player.trainColor !== color) {
+                colorBtn.disabled = true;
             }
         });
-    });
-}
-
-// Setup new player color selection functionality
-function setupNewPlayerColorSelection() {
-    const newPlayerColorOptions = document.querySelectorAll('#newPlayerColorGrid .color-option');
+    }
     
-    newPlayerColorOptions.forEach(option => {
-        option.addEventListener('click', function() {
-            if (!this.classList.contains('disabled')) {
-                // Remove selection from all options
-                newPlayerColorOptions.forEach(opt => opt.classList.remove('selected'));
-                // Select this option
-                this.classList.add('selected');
-                // Check the radio button
-                const radio = this.querySelector('input[type="radio"]');
-                radio.checked = true;
-            }
-        });
-    });
+    // Enable join button if color is selected
+    const joinButton = document.querySelector('#joinGameForm button[type="submit"]');
+    if (joinButton) {
+        joinButton.disabled = false;
+    }
 }
 
-// Update available colors based on current players
-function updateAvailableColors() {
-    if (!currentGame) return;
-
-    const colorOptions = document.querySelectorAll('.color-option');
-    const newPlayerColorOptions = document.querySelectorAll('#newPlayerColorGrid .color-option');
-    const usedColors = currentGame.players.map(player => player.trainColor);
-
-    // Update main color selection
-    colorOptions.forEach(option => {
-        const color = option.getAttribute('data-color');
-        const isUsed = usedColors.includes(color);
-        
-        if (isUsed) {
-            option.classList.add('disabled');
-            option.classList.remove('selected');
-            const radio = option.querySelector('input[type="radio"]');
-            radio.checked = false;
-        } else {
-            option.classList.remove('disabled');
-        }
-    });
-
-    // Update new player color selection
-    newPlayerColorOptions.forEach(option => {
-        const color = option.getAttribute('data-color');
-        const isUsed = usedColors.includes(color);
-        
-        if (isUsed) {
-            option.classList.add('disabled');
-            option.classList.remove('selected');
-            const radio = option.querySelector('input[type="radio"]');
-            radio.checked = false;
-        } else {
-            option.classList.remove('disabled');
-        }
-    });
-
-    // Check if the currently selected color is still available for join button
-    const joinButton = document.querySelector('#gameSetup .btn');
-    const selectedColor = document.querySelector('input[name="trainColor"]:checked');
-    if (selectedColor && usedColors.includes(selectedColor.value)) {
-        // Selected color is no longer available, disable join button
-        joinButton.disabled = true;
-        // Clear the selection
-        selectedColor.checked = false;
-        document.querySelectorAll('.color-option').forEach(option => {
-            option.classList.remove('selected');
-        });
-    }
-
-    // Update the game status displays
-    updateAvailableColorsDisplay();
-    updateCurrentPlayersDisplay();
-}
-
-// Add another player (offline player)
-function addOtherPlayer() {
-    if (!currentGame) {
-        showMessage('No active game found', 'error');
-        return;
-    }
-
-    const playerName = document.getElementById('newPlayerName').value.trim();
-    const selectedColor = document.querySelector('input[name="newPlayerColor"]:checked');
-
-    if (!playerName || !selectedColor) {
-        showMessage('Please enter a player name and select a color', 'error');
-        return;
-    }
-
-    const trainColor = selectedColor.value;
-
-    // Disable button while processing
-    const addButton = document.getElementById('addPlayerBtn');
-    const originalText = addButton.innerHTML;
-    addButton.disabled = true;
-    addButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
-
-    console.log('Adding player:', { gameId: currentGame.id, playerName, trainColor });
-
-    socket.emit('addOtherPlayer', { gameId: currentGame.id, playerName, trainColor }, (response) => {
-        console.log('Server response:', response);
-        
-        // Always re-enable button first
-        addButton.disabled = false;
-        addButton.innerHTML = originalText;
-        
-        if (response && response.success) {
-            currentGame = response.game;
-            // Clear the form
-            document.getElementById('newPlayerName').value = '';
-            document.querySelectorAll('input[name="newPlayerColor"]').forEach(radio => radio.checked = false);
-            document.querySelectorAll('#newPlayerColorGrid .color-option').forEach(option => {
-                option.classList.remove('selected');
-            });
-            showMessage(`Added ${playerName} to the game!`, 'success');
-        } else {
-            const errorMessage = response && response.error ? response.error : 'Failed to add player';
-            showMessage(errorMessage, 'error');
-        }
-    });
-
-    // Add a timeout fallback in case the callback never fires
-    setTimeout(() => {
-        if (addButton.disabled) {
-            console.log('Timeout reached, re-enabling button');
-            addButton.disabled = false;
-            addButton.innerHTML = originalText;
-            showMessage('Request timed out. Please try again.', 'error');
-        }
-    }, 10000); // 10 second timeout
-}
-
-// Toggle the add players section
-function toggleAddPlayersSection() {
-    const content = document.getElementById('addPlayersContent');
-    const toggle = document.getElementById('addPlayersToggle');
-    const isVisible = content.style.display !== 'none';
+async function handleCreateGame(e) {
+    e.preventDefault();
     
-    if (isVisible) {
-        content.style.display = 'none';
-        toggle.style.transform = 'rotate(0deg)';
-    } else {
-        content.style.display = 'block';
-        toggle.style.transform = 'rotate(180deg)';
-    }
-}
-
-// Share the game
-function shareGame() {
-    if (!currentGame) {
-        showMessage('No active game to share', 'error');
-        return;
-    }
-
-    const gameUrl = `${window.location.origin}?game=${currentGame.id}`;
-    
-    // Try to use the Web Share API if available
-    if (navigator.share) {
-        navigator.share({
-            title: 'Join my Mexican Train game!',
-            text: `Join my Mexican Train game! Game ID: ${currentGame.id}`,
-            url: gameUrl
-        }).catch((error) => {
-            console.log('Error sharing:', error);
-            copyToClipboard(gameUrl);
-        });
-    } else {
-        // Fallback to copying to clipboard
-        copyToClipboard(gameUrl);
-    }
-}
-
-// Copy text to clipboard
-function copyToClipboard(text) {
-    if (navigator.clipboard) {
-        navigator.clipboard.writeText(text).then(() => {
-            showMessage('Game link copied to clipboard!', 'success');
-        }).catch(() => {
-            fallbackCopyToClipboard(text);
-        });
-    } else {
-        fallbackCopyToClipboard(text);
-    }
-}
-
-// Fallback copy method for older browsers
-function fallbackCopyToClipboard(text) {
-    const textArea = document.createElement('textarea');
-    textArea.value = text;
-    textArea.style.position = 'fixed';
-    textArea.style.left = '-999999px';
-    textArea.style.top = '-999999px';
-    document.body.appendChild(textArea);
-    textArea.focus();
-    textArea.select();
+    const gameId = Math.random().toString(36).substring(2, 8).toUpperCase();
     
     try {
-        document.execCommand('copy');
-        showMessage('Game link copied to clipboard!', 'success');
-    } catch (err) {
-        showMessage('Failed to copy link. Please copy manually: ' + text, 'error');
-    }
-    
-    document.body.removeChild(textArea);
-}
-
-// Create a new game
-function createGame() {
-    socket.emit('createGame', (response) => {
-        if (response.gameId) {
-            currentGame = response.game;
-            document.getElementById('currentGameId').textContent = response.gameId;
-            document.getElementById('gameIdInput').value = response.gameId;
+        const response = await fetch('/api/games', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                gameId: gameId,
+                playerName: 'Host',
+                trainColor: 'red'
+            })
+        });
+        
+        if (response.ok) {
+            currentGame = await response.json();
+            currentPlayer = currentGame.players[0];
             
             showGameSetup();
-            showMessage(`Game created! Share this Game ID: ${response.gameId}`, 'success');
+            updateGameStatus();
+        } else {
+            alert('Failed to create game');
         }
-    });
+    } catch (error) {
+        console.error('Error creating game:', error);
+        alert('Failed to create game');
+    }
 }
 
-// Join an existing game from main page
-function joinExistingGame() {
-    const gameId = document.getElementById('mainGameIdInput').value.trim();
+async function handleJoinGame(e) {
+    e.preventDefault();
+    
+    const gameId = document.getElementById('joinGameId').value.trim();
+    const playerName = document.getElementById('joinPlayerName').value.trim();
+    const selectedColor = document.querySelector('.color-option.selected');
+    
+    if (!selectedColor) {
+        alert('Please select a train color');
+        return;
+    }
+    
+    const trainColor = selectedColor.dataset.color;
+    
+    try {
+        // First, get the game to check if it exists
+        const getResponse = await fetch(`/api/games/${gameId}`);
+        if (!getResponse.ok) {
+            alert('Game not found');
+            return;
+        }
+        
+        currentGame = await getResponse.json();
+        
+        // Add the player to the game
+        const addResponse = await fetch(`/api/games/${gameId}/players`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                playerName: playerName,
+                trainColor: trainColor
+            })
+        });
+        
+        if (addResponse.ok) {
+            const newPlayer = await addResponse.json();
+            currentPlayer = newPlayer;
+            currentGame.players.push(newPlayer);
+            
+            showGameSetup();
+            updateGameStatus();
+        } else {
+            alert('Failed to join game');
+        }
+    } catch (error) {
+        console.error('Error joining game:', error);
+        alert('Failed to join game');
+    }
+}
+
+async function handleJoinExistingGame(e) {
+    e.preventDefault();
+    
+    const gameId = document.getElementById('existingGameId').value.trim();
     
     if (!gameId) {
-        showMessage('Please enter a Game ID', 'error');
+        alert('Please enter a game ID');
         return;
     }
-
-    // Pre-fill the game ID in the setup form
-    document.getElementById('gameIdInput').value = gameId;
-    document.getElementById('currentGameId').textContent = gameId;
     
-    // Show the game setup form
-    showGameSetup();
-    
-    // Clear the main page input
-    document.getElementById('mainGameIdInput').value = '';
+    try {
+        const response = await fetch(`/api/games/${gameId}`);
+        if (response.ok) {
+            currentGame = await response.json();
+            showGameSetup();
+            updateGameStatus();
+        } else {
+            alert('Game not found');
+        }
+    } catch (error) {
+        console.error('Error joining existing game:', error);
+        alert('Failed to join game');
+    }
 }
 
-// Join an existing game
-function joinGame() {
-    const gameId = document.getElementById('gameIdInput').value.trim();
-    const playerName = document.getElementById('playerNameInput').value.trim();
-    const selectedColor = document.querySelector('input[name="trainColor"]:checked');
-
-    if (!gameId || !playerName || !selectedColor) {
-        showMessage('Please fill in all fields and select a train color', 'error');
+async function handleGameSetup(e) {
+    e.preventDefault();
+    
+    const playerName = document.getElementById('setupPlayerName').value.trim();
+    const selectedColor = document.querySelector('.color-option.selected');
+    
+    if (!selectedColor) {
+        alert('Please select a train color');
         return;
     }
-
-    const trainColor = selectedColor.value;
-
-    socket.emit('joinGame', { gameId, playerName, trainColor }, (response) => {
-        if (response.success) {
-            currentGame = response.game;
-            document.getElementById('currentGameId').textContent = gameId;
-            showGameInProgress();
-            showMessage(`Successfully joined game ${gameId}!`, 'success');
-        } else {
-            showMessage(response.error || 'Failed to join game', 'error');
-        }
-    });
+    
+    const trainColor = selectedColor.dataset.color;
+    
+    if (!currentGame) {
+        alert('No game found');
+        return;
+    }
+    
+    // Update current player info
+    currentPlayer = {
+        id: `player_${Date.now()}`,
+        name: playerName,
+        trainColor: trainColor,
+        scores: [],
+        isOffline: false
+    };
+    
+    // Update the first player in the game
+    currentGame.players[0] = currentPlayer;
+    
+    showGameInterface();
+    updateGameStatus();
 }
 
-// Submit scores for the current round
-function submitScores() {
-    if (!currentGame) return;
-
-    const scoreInputs = document.querySelectorAll('#scoreInputGrid input');
-    const roundScores = [];
-
-    scoreInputs.forEach(input => {
-        const playerId = input.getAttribute('data-player-id');
-        const score = parseInt(input.value) || 0;
-        roundScores.push({ playerId, score });
-    });
-
-    socket.emit('addRoundScores', { gameId: currentGame.id, roundScores }, (response) => {
-        if (response.success) {
-            currentGame = response.game;
-            updateScoreInputs();
-            updateChart();
-            showMessage('Round scores submitted successfully!', 'success');
+async function handleAddPlayer(e) {
+    e.preventDefault();
+    
+    const playerName = document.getElementById('addPlayerName').value.trim();
+    const selectedColor = document.querySelector('.color-option.selected');
+    
+    if (!selectedColor) {
+        alert('Please select a train color');
+        return;
+    }
+    
+    const trainColor = selectedColor.dataset.color;
+    
+    if (!currentGame) {
+        alert('No game found');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/games/${currentGame.id}/players`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                playerName: playerName,
+                trainColor: trainColor
+            })
+        });
+        
+        if (response.ok) {
+            const newPlayer = await response.json();
+            currentGame.players.push(newPlayer);
+            
+            // Clear form
+            document.getElementById('addPlayerName').value = '';
+            document.querySelector('.color-option.selected')?.classList.remove('selected');
+            
+            updateGameStatus();
+            updateScoreInputForm();
         } else {
-            showMessage(response.error || 'Failed to submit scores', 'error');
+            alert('Failed to add player');
         }
-    });
+    } catch (error) {
+        console.error('Error adding player:', error);
+        alert('Failed to add player');
+    }
 }
 
-// Show game setup interface
+async function handleScoreSubmit(e) {
+    e.preventDefault();
+    
+    if (!currentGame) {
+        alert('No game found');
+        return;
+    }
+    
+    const roundNumber = currentGame.rounds.length + 1;
+    const scores = [];
+    
+    currentGame.players.forEach(player => {
+        const scoreInput = document.getElementById(`score-${player.id}`);
+        const score = parseInt(scoreInput.value) || 0;
+        scores.push({
+            playerId: player.id,
+            playerName: player.name,
+            score: score
+        });
+    });
+    
+    try {
+        const response = await fetch(`/api/games/${currentGame.id}/scores`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                roundNumber: roundNumber,
+                scores: scores
+            })
+        });
+        
+        if (response.ok) {
+            const round = await response.json();
+            currentGame.rounds.push(round);
+            
+            // Update player scores
+            scores.forEach(scoreEntry => {
+                const player = currentGame.players.find(p => p.id === scoreEntry.playerId);
+                if (player) {
+                    player.scores.push(scoreEntry.score);
+                }
+            });
+            
+            // Clear form
+            currentGame.players.forEach(player => {
+                const scoreInput = document.getElementById(`score-${player.id}`);
+                if (scoreInput) scoreInput.value = '';
+            });
+            
+            updateScoreChart();
+            updateGameStatus();
+        } else {
+            alert('Failed to submit scores');
+        }
+    } catch (error) {
+        console.error('Error submitting scores:', error);
+        alert('Failed to submit scores');
+    }
+}
+
 function showGameSetup() {
-    gameCreation.style.display = 'none';
-    gameSetup.classList.add('active');
-    gameInfo.classList.add('active');
+    document.getElementById('mainPage').style.display = 'none';
+    document.getElementById('gameSetup').style.display = 'block';
+    document.getElementById('gameInterface').style.display = 'none';
+    
+    // Auto-fill game ID
+    document.getElementById('setupGameId').value = currentGame.id;
+    
+    // Update available colors
+    updateAvailableColors();
 }
 
-// Show game in progress interface
-function showGameInProgress() {
-    gameCreation.style.display = 'none';
-    gameSetup.classList.remove('active');
-    gameInfo.classList.add('active');
-    playersDisplay.classList.add('active');
-    scoreInput.classList.add('active');
-    chartContainer.classList.add('active');
-    document.getElementById('gameStatus').classList.add('active');
+function showGameInterface() {
+    document.getElementById('mainPage').style.display = 'none';
+    document.getElementById('gameSetup').style.display = 'none';
+    document.getElementById('gameInterface').style.display = 'block';
+    
+    // Update game ID display
+    gameIdDisplay.textContent = currentGame.id;
+    
+    // Update forms and charts
+    updateScoreInputForm();
+    updateScoreChart();
+    updateGameStatus();
 }
 
-// Update the players display
-function updatePlayersDisplay() {
+function updateAvailableColors() {
+    const takenColors = currentGame ? currentGame.players.map(p => p.trainColor) : [];
+    
+    document.querySelectorAll('.color-option').forEach(button => {
+        const color = button.dataset.color;
+        if (takenColors.includes(color)) {
+            button.disabled = true;
+            button.classList.add('taken');
+        } else {
+            button.disabled = false;
+            button.classList.remove('taken');
+        }
+    });
+}
+
+function updateScoreInputForm() {
+    const scoreInputs = document.getElementById('scoreInputs');
+    scoreInputs.innerHTML = '';
+    
     if (!currentGame) return;
-
-    const playersGrid = document.getElementById('playersGrid');
-    const playerCount = document.getElementById('playerCount');
-    
-    playerCount.textContent = currentGame.players.length;
-    
-    playersGrid.innerHTML = '';
     
     currentGame.players.forEach(player => {
-        const totalScore = player.scores.reduce((sum, score) => sum + score, 0);
-        const playerCard = document.createElement('div');
-        playerCard.className = `player-card ${player.trainColor}`;
-        
-        const offlineBadge = player.isOffline ? '<span style="background: #6b7280; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; margin-left: 8px;">Offline</span>' : '';
-        
-        playerCard.innerHTML = `
-            <div class="player-name">
-                ${player.name}
-                ${offlineBadge}
-            </div>
-            <div class="player-score">Total: ${totalScore}</div>
+        const playerDiv = document.createElement('div');
+        playerDiv.className = 'score-input-row';
+        playerDiv.innerHTML = `
+            <label for="score-${player.id}">
+                <span class="color-dot ${player.trainColor}"></span>
+                ${player.name}:
+            </label>
+            <input type="number" id="score-${player.id}" name="score-${player.id}" 
+                   placeholder="Enter score" min="0" required>
         `;
-        playersGrid.appendChild(playerCard);
-    });
-
-    // Update the game status displays
-    updateAvailableColorsDisplay();
-    updateCurrentPlayersDisplay();
-}
-
-// Update available colors display
-function updateAvailableColorsDisplay() {
-    if (!currentGame) return;
-
-    const availableColorsGrid = document.getElementById('availableColorsGrid');
-    const usedColors = currentGame.players.map(player => player.trainColor);
-    
-    availableColorsGrid.innerHTML = '';
-    
-    Object.entries(colors).forEach(([colorName, colorValue]) => {
-        const isAvailable = !usedColors.includes(colorName);
-        const colorItem = document.createElement('div');
-        colorItem.className = `available-color-item ${isAvailable ? 'available' : 'taken'}`;
-        
-        colorItem.innerHTML = `
-            <div class="available-color-dot" style="background-color: ${colorValue};"></div>
-            <span>${colorName.charAt(0).toUpperCase() + colorName.slice(1)}</span>
-        `;
-        
-        availableColorsGrid.appendChild(colorItem);
+        scoreInputs.appendChild(playerDiv);
     });
 }
 
-// Update current players display
-function updateCurrentPlayersDisplay() {
-    if (!currentGame) return;
-
-    const currentPlayersList = document.getElementById('currentPlayersList');
+function updateScoreChart() {
+    if (!currentGame || !currentGame.players.length) return;
     
-    currentPlayersList.innerHTML = '';
-    
-    if (currentGame.players.length === 0) {
-        currentPlayersList.innerHTML = '<p style="color: #6b7280; font-style: italic;">No players yet</p>';
-        return;
-    }
-    
-    currentGame.players.forEach(player => {
-        const totalScore = player.scores.reduce((sum, score) => sum + score, 0);
-        const playerItem = document.createElement('div');
-        playerItem.className = 'current-player-item';
-        
-        const status = player.isOffline ? 'Offline' : 'Online';
-        
-        playerItem.innerHTML = `
-            <div class="current-player-color" style="background-color: ${colors[player.trainColor]};"></div>
-            <div class="current-player-info">
-                <div class="current-player-name">${player.name}</div>
-                <div class="current-player-status">${status}</div>
-            </div>
-            <div class="current-player-score">${totalScore}</div>
-        `;
-        
-        currentPlayersList.appendChild(playerItem);
-    });
-}
-
-// Update score input fields
-function updateScoreInputs() {
-    if (!currentGame || currentGame.players.length === 0) return;
-
-    const scoreInputGrid = document.getElementById('scoreInputGrid');
-    const currentRound = document.getElementById('currentRound');
-    const roundDisplay = document.getElementById('roundDisplay');
-    
-    currentRound.textContent = currentGame.currentRound;
-    roundDisplay.textContent = currentGame.currentRound;
-    
-    scoreInputGrid.innerHTML = '';
-    
-    currentGame.players.forEach(player => {
-        const scoreGroup = document.createElement('div');
-        scoreGroup.className = 'score-input-group';
-        scoreGroup.innerHTML = `
-            <label for="score-${player.id}">${player.name} (${player.trainColor})</label>
-            <input type="number" id="score-${player.id}" data-player-id="${player.id}" 
-                   placeholder="Enter score" min="0" value="0">
-        `;
-        scoreInputGrid.appendChild(scoreGroup);
-    });
-}
-
-// Update the chart
-function updateChart() {
-    if (!currentGame || currentGame.players.length === 0) return;
-
     const ctx = document.getElementById('scoreChart').getContext('2d');
     
-    // Destroy existing chart if it exists
-    if (scoreChart) {
-        scoreChart.destroy();
+    // Destroy existing chart
+    if (window.scoreChart) {
+        window.scoreChart.destroy();
     }
-
+    
     // Prepare data for horizontal bar chart
-    const datasets = [];
     const labels = currentGame.players.map(player => player.name);
-
-    // Create datasets for each round
+    const datasets = [];
+    
+    // Create a dataset for each round
     currentGame.rounds.forEach((round, roundIndex) => {
         const roundData = currentGame.players.map(player => {
-            const roundScore = round.scores.find(s => s.playerId === player.id);
-            return roundScore ? roundScore.score : 0;
+            const scoreEntry = round.scores.find(s => s.playerId === player.id);
+            return scoreEntry ? scoreEntry.score : 0;
         });
-
+        
         datasets.push({
             label: `Round ${round.roundNumber}`,
             data: roundData,
-            backgroundColor: colors[Object.keys(colors)[roundIndex % Object.keys(colors).length]] || '#6b7280',
-            borderColor: colors[Object.keys(colors)[roundIndex % Object.keys(colors).length]] || '#6b7280',
+            backgroundColor: getColorForRound(roundIndex),
+            borderColor: getColorForRound(roundIndex),
             borderWidth: 1
         });
     });
-
-    scoreChart = new Chart(ctx, {
+    
+    // Create horizontal bar chart
+    window.scoreChart = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: labels,
             datasets: datasets
         },
         options: {
-            indexAxis: 'y', // This makes it a horizontal bar chart
+            indexAxis: 'y',
             responsive: true,
             maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Mexican Train Scores by Round'
+                },
+                legend: {
+                    display: true,
+                    position: 'top'
+                }
+            },
             scales: {
                 x: {
-                    stacked: true,
+                    beginAtZero: true,
                     title: {
                         display: true,
                         text: 'Score'
-                    },
-                    reverse: true // Lower scores are better in Mexican Train
+                    }
                 },
                 y: {
-                    stacked: true,
                     title: {
                         display: true,
                         text: 'Players'
                     }
-                }
-            },
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Mexican Train Scores by Player and Round'
-                },
-                legend: {
-                    position: 'top'
                 }
             }
         }
     });
 }
 
-// Show message to user
-function showMessage(message, type) {
-    const messageDiv = document.createElement('div');
-    messageDiv.className = type;
-    messageDiv.textContent = message;
-    
-    const container = document.querySelector('.container');
-    container.insertBefore(messageDiv, container.firstChild);
-    
-    setTimeout(() => {
-        messageDiv.remove();
-    }, 5000);
+function getColorForRound(roundIndex) {
+    const colors = [
+        '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
+        '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF'
+    ];
+    return colors[roundIndex % colors.length];
 }
 
-// Socket event listeners
-socket.on('gameUpdate', (game) => {
-    currentGame = game;
-    updatePlayersDisplay();
-    updateScoreInputs();
-    updateChart();
-    updateAvailableColors();
-});
+function updateGameStatus() {
+    if (!currentGame) return;
+    
+    const availableColors = trainColors.filter(color => 
+        !currentGame.players.some(player => player.trainColor === color)
+    );
+    
+    const playersList = currentGame.players.map(player => 
+        `<span class="color-dot ${player.trainColor}"></span> ${player.name}`
+    ).join(', ');
+    
+    document.getElementById('availableColors').textContent = availableColors.join(', ');
+    document.getElementById('currentPlayers').innerHTML = playersList;
+}
 
-socket.on('connect', () => {
-    console.log('Connected to server');
-});
-
-socket.on('disconnect', () => {
-    console.log('Disconnected from server');
-    showMessage('Connection lost. Please refresh the page.', 'error');
-});
-
-// Auto-fill game ID from URL parameters
-window.addEventListener('load', () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const gameId = urlParams.get('game');
-    if (gameId) {
-        document.getElementById('mainGameIdInput').value = gameId;
-        document.getElementById('gameIdInput').value = gameId;
+function toggleAddPlayerSection() {
+    const section = document.getElementById('addPlayerSection');
+    const toggle = document.getElementById('addPlayerToggle');
+    
+    if (section.style.display === 'none' || !section.style.display) {
+        section.style.display = 'block';
+        toggle.innerHTML = '<i class="fas fa-chevron-up"></i> Hide Add Player';
+    } else {
+        section.style.display = 'none';
+        toggle.innerHTML = '<i class="fas fa-chevron-down"></i> Add Another Player';
     }
-}); 
+}
+
+function shareGame() {
+    const gameUrl = `${window.location.origin}?game=${currentGame.id}`;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: 'Join my Mexican Train game!',
+            text: `Join my Mexican Train game with ID: ${currentGame.id}`,
+            url: gameUrl
+        });
+    } else if (navigator.clipboard) {
+        navigator.clipboard.writeText(gameUrl).then(() => {
+            alert('Game link copied to clipboard!');
+        });
+    } else {
+        // Fallback
+        const textArea = document.createElement('textarea');
+        textArea.value = gameUrl;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        alert('Game link copied to clipboard!');
+    }
+}
+
+function initializeChart() {
+    const ctx = document.getElementById('scoreChart').getContext('2d');
+    window.scoreChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: [],
+            datasets: []
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Mexican Train Scores by Round'
+                }
+            }
+        }
+    });
+} 

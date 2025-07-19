@@ -8,12 +8,11 @@
     "build": "echo 'Static build completed - serving from public directory'",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["mexican train", "score tracker", "real-time", "game", "dominoes"],
+  "keywords": ["mexican train", "score tracker", "game", "dominoes"],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "express": "^4.18.2",
-    "socket.io": "^4.7.2",
     "cors": "^2.8.5"
   },
   "engines": {

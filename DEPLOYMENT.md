@@ -1,17 +1,47 @@
 # Deployment Guide for traintally.com
 
-## Option 1: Traditional Hosting (Recommended for Node.js Apps)
+## Option 1: Cloudflare Pages (Now Recommended!)
 
 ### Step 1: Prepare Your Repository
 1. ✅ **Repository Ready**: Your code is already pushed to [https://github.com/gauchogel/traintally.git](https://github.com/gauchogel/traintally.git)
 2. ✅ **Files Committed**: All files are committed and pushed to the main branch
 
-### Step 2: Set Up VPS/Server
+### Step 2: Set Up Cloudflare Pages
+1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com)
+2. Navigate to "Pages" in the sidebar
+3. Click "Create a project"
+4. Choose "Connect to Git"
+5. Select your repository: `gauchogel/traintally`
+
+### Step 3: Configure Build Settings
+- **Framework preset**: None
+- **Build command**: `npm run build`
+- **Build output directory**: `public`
+- **Root directory**: `/` (leave empty)
+
+### Step 4: Environment Variables
+Add this environment variable:
+- `NODE_VERSION`: `18`
+
+### Step 5: Deploy
+1. Click "Save and Deploy"
+2. Wait for the build to complete
+3. Your site will be available at a `.pages.dev` URL
+
+### Step 6: Connect Custom Domain
+1. In your Pages project, go to "Custom domains"
+2. Click "Set up a custom domain"
+3. Enter `traintally.com`
+4. Follow the DNS configuration instructions
+
+## Option 2: Traditional Hosting (VPS/Server)
+
+### Step 1: Set Up VPS/Server
 1. Get a VPS (DigitalOcean, Linode, AWS, etc.)
 2. Install Node.js 18+ and npm
 3. Set up nginx as reverse proxy
 
-### Step 3: Deploy Application
+### Step 2: Deploy Application
 ```bash
 # Clone your repository
 git clone https://github.com/gauchogel/traintally.git
@@ -29,7 +59,7 @@ pm2 startup
 pm2 save
 ```
 
-### Step 4: Configure Nginx
+### Step 3: Configure Nginx
 Create `/etc/nginx/sites-available/traintally.com`:
 ```nginx
 server {
@@ -50,7 +80,7 @@ server {
 }
 ```
 
-### Step 5: Enable Site and SSL
+### Step 4: Enable Site and SSL
 ```bash
 # Enable the site
 sudo ln -s /etc/nginx/sites-available/traintally.com /etc/nginx/sites-enabled/
