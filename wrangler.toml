@@ -1,0 +1,6 @@
+[build]
+command = ""
+pages_build_output_dir = "public"
+
+[env.production]
+name = "traintally" 
