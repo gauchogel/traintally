@@ -1,32 +1,29 @@
 {
   "name": "tally-train",
   "version": "1.0.0",
-  "description": "Mexican Train score tracking web application for friends playing together",
-  "main": "public/index.html",
+  "description": "Mexican Train score tracking app with real-time multiplayer",
+  "main": "src/index.js",
   "scripts": {
-    "build": "echo \"Static site - no build needed\"",
+    "dev": "npx wrangler dev",
+    "deploy": "npx wrangler deploy",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
-    "mexican train",
-    "score tracker",
+    "mexican-train",
     "game",
-    "dominoes"
+    "score-tracking",
+    "multiplayer"
   ],
-  "author": "",
-  "license": "ISC",
-  "engines": {
-    "node": ">=16.0.0"
+  "author": "Scott Vogelgesang",
+  "license": "MIT",
+  "devDependencies": {
+    "wrangler": "^4.25.0"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/gauchogel/traintally.git"
-  },
-  "bugs": {
-    "url": "https://github.com/gauchogel/traintally/issues"
-  },
-  "homepage": "https://github.com/gauchogel/traintally#readme",
   "dependencies": {
-    "@supabase/supabase-js": "^2.52.0"
+    "@cloudflare/kv-asset-handler": "^0.4.0",
+    "@tailwindcss/forms": "^0.5.10",
+    "chart.js": "^4.5.0",
+    "lucide-react": "^0.525.0",
+    "tailwindcss": "^4.1.11"
   }
 }
