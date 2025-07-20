@@ -1,6 +1,2 @@
-[build]
-command = ""
-pages_build_output_dir = "public"
-
-[env.production]
-name = "traintally" 
+name = "traintally"
+pages_build_output_dir = "public" 
