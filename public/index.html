@@ -124,6 +124,24 @@
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--input-border);
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+            background: var(--input-bg);
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--btn-primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
         .btn {
             background: var(--btn-primary);
             color: var(--text-inverse);
@@ -548,54 +566,19 @@
                     <input type="text" id="setupPlayerName" placeholder="Enter your name">
                 </div>
                 <div class="form-group">
-                    <label>Select Your Train Color</label>
-                    <div class="color-grid">
-                        <div class="color-option red" data-color="red">
-                            <input type="radio" name="trainColor" value="red" id="color-red">
-                            <div class="color-dot red"></div>
-                            <span>Red</span>
-                        </div>
-                        <div class="color-option white" data-color="white">
-                            <input type="radio" name="trainColor" value="white" id="color-white">
-                            <div class="color-dot white"></div>
-                            <span>White</span>
-                        </div>
-                        <div class="color-option green" data-color="green">
-                            <input type="radio" name="trainColor" value="green" id="color-green">
-                            <div class="color-dot green"></div>
-                            <span>Green</span>
-                        </div>
-                        <div class="color-option orange" data-color="orange">
-                            <input type="radio" name="trainColor" value="orange" id="color-orange">
-                            <div class="color-dot orange"></div>
-                            <span>Orange</span>
-                        </div>
-                        <div class="color-option brown" data-color="brown">
-                            <input type="radio" name="trainColor" value="brown" id="color-brown">
-                            <div class="color-dot brown"></div>
-                            <span>Brown</span>
-                        </div>
-                        <div class="color-option black" data-color="black">
-                            <input type="radio" name="trainColor" value="black" id="color-black">
-                            <div class="color-dot black"></div>
-                            <span>Black</span>
-                        </div>
-                        <div class="color-option blue" data-color="blue">
-                            <input type="radio" name="trainColor" value="blue" id="color-blue">
-                            <div class="color-dot blue"></div>
-                            <span>Blue</span>
-                        </div>
-                        <div class="color-option pink" data-color="pink">
-                            <input type="radio" name="trainColor" value="pink" id="color-pink">
-                            <div class="color-dot pink"></div>
-                            <span>Pink</span>
-                        </div>
-                        <div class="color-option yellow" data-color="yellow">
-                            <input type="radio" name="trainColor" value="yellow" id="color-yellow">
-                            <div class="color-dot yellow"></div>
-                            <span>Yellow</span>
-                        </div>
-                    </div>
+                    <label for="setupTrainColor">Select Your Train Color</label>
+                    <select id="setupTrainColor" class="form-control">
+                        <option value="">Choose a color...</option>
+                        <option value="red">🔴 Red</option>
+                        <option value="white">⚪ White</option>
+                        <option value="green">🟢 Green</option>
+                        <option value="orange">🟠 Orange</option>
+                        <option value="brown">🟤 Brown</option>
+                        <option value="black">⚫ Black</option>
+                        <option value="blue">🔵 Blue</option>
+                        <option value="pink">🩷 Pink</option>
+                        <option value="yellow">🟡 Yellow</option>
+                    </select>
                 </div>
                 <button class="btn btn-success" onclick="setupPlayer()">
                     <i class="fas fa-check"></i>
@@ -634,10 +617,10 @@
                         <input type="text" id="addPlayerName" placeholder="Enter player name">
                     </div>
                     <div class="form-group">
-                        <label>Select Their Color</label>
-                        <div class="color-grid" id="addPlayerColorGrid">
-                            <!-- Color options will be populated dynamically -->
-                        </div>
+                        <label for="addPlayerColor">Select Their Color</label>
+                        <select id="addPlayerColor" class="form-control">
+                            <option value="">Choose a color...</option>
+                        </select>
                     </div>
                     <button class="btn btn-success" onclick="addPlayer()">
                         <i class="fas fa-plus-circle"></i>
