@@ -98,35 +98,41 @@ function updateThemeButton() {
 }
 
 function updateChartTheme(isDark) {
-    if (!window.scoreChart || !window.scoreChart.options) return;
-    
-    const textColor = isDark ? '#f9fafb' : '#1f2937';
-    const gridColor = isDark ? '#374151' : '#e5e7eb';
-    
-    // Safely update chart options
-    if (window.scoreChart.options.plugins && window.scoreChart.options.plugins.title) {
-        window.scoreChart.options.plugins.title.color = textColor;
+    try {
+        if (!window.scoreChart || !window.scoreChart.options || !window.scoreChart.options.plugins) {
+            return;
+        }
+        
+        const textColor = isDark ? '#f9fafb' : '#1f2937';
+        const gridColor = isDark ? '#374151' : '#e5e7eb';
+        
+        // Safely update chart options
+        if (window.scoreChart.options.plugins.title) {
+            window.scoreChart.options.plugins.title.color = textColor;
+        }
+        
+        if (window.scoreChart.options.scales && window.scoreChart.options.scales.x) {
+            if (window.scoreChart.options.scales.x.grid) {
+                window.scoreChart.options.scales.x.grid.color = gridColor;
+            }
+            if (window.scoreChart.options.scales.x.ticks) {
+                window.scoreChart.options.scales.x.ticks.color = textColor;
+            }
+        }
+        
+        if (window.scoreChart.options.scales && window.scoreChart.options.scales.y) {
+            if (window.scoreChart.options.scales.y.grid) {
+                window.scoreChart.options.scales.y.grid.color = gridColor;
+            }
+            if (window.scoreChart.options.scales.y.ticks) {
+                window.scoreChart.options.scales.y.ticks.color = textColor;
+            }
+        }
+        
+        window.scoreChart.update();
+    } catch (error) {
+        console.log('Chart theme update failed:', error);
     }
-    
-    if (window.scoreChart.options.scales && window.scoreChart.options.scales.x) {
-        if (window.scoreChart.options.scales.x.grid) {
-            window.scoreChart.options.scales.x.grid.color = gridColor;
-        }
-        if (window.scoreChart.options.scales.x.ticks) {
-            window.scoreChart.options.scales.x.ticks.color = textColor;
-        }
-    }
-    
-    if (window.scoreChart.options.scales && window.scoreChart.options.scales.y) {
-        if (window.scoreChart.options.scales.y.grid) {
-            window.scoreChart.options.scales.y.grid.color = gridColor;
-        }
-        if (window.scoreChart.options.scales.y.ticks) {
-            window.scoreChart.options.scales.y.ticks.color = textColor;
-        }
-    }
-    
-    window.scoreChart.update();
 }
 
 // Listen for system theme changes
