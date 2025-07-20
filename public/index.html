@@ -176,9 +176,10 @@
             .color-option {
                 padding: 8px;
                 font-size: 0.9rem;
-                min-width: 0;
+                min-width: 100px;
                 width: 100%;
                 max-width: 140px;
+                justify-content: center;
             }
             
             .color-dot {
@@ -195,6 +196,7 @@
             
             .color-option {
                 max-width: 200px;
+                justify-content: center;
             }
         }
 
@@ -230,6 +232,7 @@
         .color-option {
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 8px;
             padding: 12px;
             border: 2px solid var(--border-color);
@@ -238,6 +241,9 @@
             transition: all 0.2s;
             background: var(--bg-secondary);
             color: var(--text-primary);
+            min-width: 120px;
+            width: 100%;
+            text-align: center;
         }
 
         .color-option:hover {
