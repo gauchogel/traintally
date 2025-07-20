@@ -191,16 +191,25 @@ function setupEventListeners() {
 }
 
 function setupColorSelection() {
+    console.log('Setting up color selection...');
     const colorButtons = document.querySelectorAll('.color-option');
+    console.log('Found color buttons:', colorButtons.length);
+    
     colorButtons.forEach(button => {
-        button.addEventListener('click', function() {
+        console.log('Adding click listener to:', button.dataset.color);
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
             const color = this.dataset.color;
+            console.log('Color clicked:', color);
             selectColor(color);
         });
     });
 }
 
 function selectColor(color) {
+    console.log('selectColor called with:', color);
+    
     // Remove previous selection
     document.querySelectorAll('.color-option').forEach(btn => {
         btn.classList.remove('selected');
@@ -212,11 +221,21 @@ function selectColor(color) {
     
     // Select new color
     const selectedButton = document.querySelector(`[data-color="${color}"]`);
-    selectedButton.classList.add('selected');
+    console.log('Selected button:', selectedButton);
     
-    // Check the radio button
-    const radio = selectedButton.querySelector('input[type="radio"]');
-    if (radio) radio.checked = true;
+    if (selectedButton) {
+        selectedButton.classList.add('selected');
+        console.log('Added selected class to:', color);
+        
+        // Check the radio button
+        const radio = selectedButton.querySelector('input[type="radio"]');
+        if (radio) {
+            radio.checked = true;
+            console.log('Checked radio button for:', color);
+        }
+    } else {
+        console.error('Could not find button for color:', color);
+    }
     
     // Disable taken colors
     if (currentGame) {
