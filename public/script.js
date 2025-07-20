@@ -385,6 +385,32 @@ function updateScoreChart() {
             labels: labels,
             datasets: datasets
         },
+        plugins: [{
+            afterDraw: function(chart) {
+                const ctx = chart.ctx;
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'middle';
+                ctx.font = '12px Arial';
+                ctx.fillStyle = '#333';
+                
+                // Calculate and display total scores
+                currentGame.players.forEach((player, playerIndex) => {
+                    const totalScore = currentGame.rounds.reduce((total, round) => {
+                        const scoreEntry = round.scores.find(s => s.playerId === player.id);
+                        return total + (scoreEntry ? scoreEntry.score : 0);
+                    }, 0);
+                    
+                    if (totalScore > 0) {
+                        const meta = chart.getDatasetMeta(0);
+                        const bar = meta.data[playerIndex];
+                        const x = bar.x + 5; // Position text slightly to the right of the bar
+                        const y = bar.y;
+                        
+                        ctx.fillText(`Total: ${totalScore}`, x, y);
+                    }
+                });
+            }
+        }],
         options: {
             indexAxis: 'y',
             responsive: true,
@@ -413,6 +439,30 @@ function updateScoreChart() {
                     title: {
                         display: true,
                         text: 'Players'
+                    }
+                }
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Mexican Train Scores by Round'
+                },
+                legend: {
+                    display: true,
+                    position: 'top'
+                },
+                tooltip: {
+                    callbacks: {
+                        afterBody: function(context) {
+                            // Calculate total score for this player
+                            const playerIndex = context[0].dataIndex;
+                            const player = currentGame.players[playerIndex];
+                            const totalScore = currentGame.rounds.reduce((total, round) => {
+                                const scoreEntry = round.scores.find(s => s.playerId === player.id);
+                                return total + (scoreEntry ? scoreEntry.score : 0);
+                            }, 0);
+                            return `Total Score: ${totalScore}`;
+                        }
                     }
                 }
             }
