@@ -532,7 +532,7 @@ function updateScoreChart() {
         });
     });
     
-    // Add total dataset at the bottom
+    // Calculate totals for display in separate column
     const totalData = currentGame.players.map(player => {
         return currentGame.rounds.reduce((total, round) => {
             const scoreEntry = round.scores.find(s => s.playerId === player.id);
@@ -540,16 +540,8 @@ function updateScoreChart() {
         }, 0);
     });
     
-    if (totalData.some(total => total > 0)) {
-        datasets.push({
-            label: 'Total',
-            data: totalData,
-            backgroundColor: 'rgba(59, 130, 246, 0.8)',
-            borderColor: 'rgba(59, 130, 246, 1)',
-            borderWidth: 2,
-            type: 'bar'
-        });
-    }
+    // Update totals column
+    updateChartTotals(totalData);
     
     // Get current theme colors
     const isDark = document.documentElement.hasAttribute('data-theme');
@@ -615,19 +607,7 @@ function updateScoreChart() {
                     borderColor: '#ffffff',
                     borderWidth: 1,
                     cornerRadius: 6,
-                    displayColors: false,
-                    callbacks: {
-                        afterBody: function(context) {
-                            // Calculate total score for this player
-                            const playerIndex = context[0].dataIndex;
-                            const player = currentGame.players[playerIndex];
-                            const totalScore = currentGame.rounds.reduce((total, round) => {
-                                const scoreEntry = round.scores.find(s => s.playerId === player.id);
-                                return total + (scoreEntry ? scoreEntry.score : 0);
-                            }, 0);
-                            return `Total Score: ${totalScore}`;
-                        }
-                    }
+                    displayColors: false
                 }
             },
             scales: {
@@ -666,6 +646,35 @@ function updateScoreChart() {
     
     // Update the score table as well
     updateScoreTable();
+}
+
+function updateChartTotals(totalData) {
+    const totalsContainer = document.getElementById('chartTotals');
+    if (!totalsContainer || !currentGame) return;
+    
+    totalsContainer.innerHTML = '';
+    
+    currentGame.players.forEach((player, index) => {
+        const totalDiv = document.createElement('div');
+        totalDiv.style.cssText = `
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            background: var(--bg-secondary);
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        `;
+        
+        totalDiv.innerHTML = `
+            <div class="color-dot ${player.trainColor}"></div>
+            <span style="font-weight: 600; color: var(--text-primary);">${player.name}:</span>
+            <span style="font-weight: 700; color: var(--text-primary); margin-left: auto;">${totalData[index]}</span>
+        `;
+        
+        totalsContainer.appendChild(totalDiv);
+    });
 }
 
 function updateScoreTable() {

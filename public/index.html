@@ -758,8 +758,14 @@
                     <i class="fas fa-chart-bar"></i>
                     <h2>Score Chart</h2>
                 </div>
-                <div class="chart-container">
-                    <canvas id="scoreChart"></canvas>
+                <div style="display: grid; grid-template-columns: 1fr auto; gap: 20px; align-items: start;">
+                    <div class="chart-container">
+                        <canvas id="scoreChart"></canvas>
+                    </div>
+                    <div class="totals-column">
+                        <h3 style="margin-bottom: 12px; color: var(--text-primary);">Totals</h3>
+                        <div id="chartTotals"></div>
+                    </div>
                 </div>
             </div>
 
