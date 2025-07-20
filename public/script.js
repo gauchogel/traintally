@@ -524,7 +524,7 @@ function updateScoreChart() {
         });
         
         datasets.push({
-            label: `Round ${round.roundNumber}`,
+            label: getRoundName(round.roundNumber),
             data: roundData,
             backgroundColor: getColorForRound(roundIndex),
             borderColor: getColorForRound(roundIndex),
@@ -629,6 +629,13 @@ function updateScoreChart() {
                     }
                 },
                 tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                    titleColor: '#ffffff',
+                    bodyColor: '#ffffff',
+                    borderColor: '#ffffff',
+                    borderWidth: 1,
+                    cornerRadius: 6,
+                    displayColors: false,
                     callbacks: {
                         afterBody: function(context) {
                             // Calculate total score for this player
@@ -676,6 +683,88 @@ function updateScoreChart() {
             }
         }
     });
+    
+    // Update the score table as well
+    updateScoreTable();
+}
+
+function updateScoreTable() {
+    if (!currentGame || !currentGame.players.length) return;
+    
+    const table = document.getElementById('scoreTable');
+    const thead = table.querySelector('thead tr');
+    const tbody = table.querySelector('tbody');
+    const tfoot = table.querySelector('tfoot tr');
+    
+    // Clear existing content
+    thead.innerHTML = '<th>Round</th>';
+    tbody.innerHTML = '';
+    tfoot.innerHTML = '<td><strong>Total</strong></td>';
+    
+    // Add player headers
+    currentGame.players.forEach(player => {
+        const th = document.createElement('th');
+        th.innerHTML = `
+            <div class="player-header">
+                <div class="color-dot ${player.trainColor}"></div>
+                <span>${player.name}</span>
+            </div>
+        `;
+        thead.appendChild(th);
+        
+        // Add total column
+        const totalTd = document.createElement('td');
+        totalTd.innerHTML = '<strong>0</strong>';
+        tfoot.appendChild(totalTd);
+    });
+    
+    // Add round rows
+    currentGame.rounds.forEach(round => {
+        const row = document.createElement('tr');
+        
+        // Round name cell
+        const roundCell = document.createElement('td');
+        roundCell.textContent = getRoundName(round.roundNumber);
+        row.appendChild(roundCell);
+        
+        // Player score cells
+        currentGame.players.forEach(player => {
+            const scoreEntry = round.scores.find(s => s.playerId === player.id);
+            const score = scoreEntry ? scoreEntry.score : 0;
+            
+            const scoreCell = document.createElement('td');
+            scoreCell.className = 'score-cell';
+            scoreCell.textContent = score;
+            
+            // Highlight best and worst scores for this round
+            const roundScores = round.scores.map(s => s.score).filter(s => s > 0);
+            if (roundScores.length > 0) {
+                const minScore = Math.min(...roundScores);
+                const maxScore = Math.max(...roundScores);
+                
+                if (score === minScore && score > 0) {
+                    scoreCell.classList.add('best');
+                } else if (score === maxScore && score > 0) {
+                    scoreCell.classList.add('worst');
+                }
+            }
+            
+            row.appendChild(scoreCell);
+        });
+        
+        tbody.appendChild(row);
+    });
+    
+    // Calculate and display totals
+    currentGame.players.forEach((player, playerIndex) => {
+        const totalScore = currentGame.rounds.reduce((total, round) => {
+            const scoreEntry = round.scores.find(s => s.playerId === player.id);
+            return total + (scoreEntry ? scoreEntry.score : 0);
+        }, 0);
+        
+        const totalCell = tfoot.children[playerIndex + 1];
+        totalCell.innerHTML = `<strong>${totalScore}</strong>`;
+    });
 }
 
 function getColorForRound(roundIndex) {
@@ -684,6 +773,14 @@ function getColorForRound(roundIndex) {
         '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF'
     ];
     return colors[roundIndex % colors.length];
+}
+
+function getRoundName(roundNumber) {
+    const doubles = [12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
+    if (roundNumber <= doubles.length) {
+        return `Double ${doubles[roundNumber - 1]}`;
+    }
+    return `Round ${roundNumber}`;
 }
 
 function updateGameStatus() {

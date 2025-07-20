@@ -314,6 +314,86 @@
             margin-top: 20px;
         }
 
+        .table-container {
+            overflow-x: auto;
+            margin-top: 16px;
+        }
+
+        .score-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+        }
+
+        .score-table th,
+        .score-table td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+
+        .score-table th {
+            background: var(--btn-primary);
+            color: var(--text-inverse);
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .score-table th:first-child,
+        .score-table td:first-child {
+            text-align: left;
+            font-weight: 600;
+            background: var(--game-info-bg);
+            position: sticky;
+            left: 0;
+            z-index: 5;
+        }
+
+        .score-table tbody tr:nth-child(even) {
+            background: var(--score-row-bg);
+        }
+
+        .score-table tbody tr:hover {
+            background: var(--game-info-bg);
+        }
+
+        .score-table .total-row {
+            background: var(--btn-primary);
+            color: var(--text-inverse);
+            font-weight: 600;
+        }
+
+        .score-table .total-row td:first-child {
+            background: var(--btn-primary);
+            color: var(--text-inverse);
+        }
+
+        .player-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .score-cell {
+            font-weight: 500;
+        }
+
+        .score-cell.best {
+            background: rgba(34, 197, 94, 0.2);
+            color: #16a34a;
+        }
+
+        .score-cell.worst {
+            background: rgba(239, 68, 68, 0.2);
+            color: #dc2626;
+        }
+
         .game-info {
             background: var(--game-info-bg);
             border-radius: 8px;
@@ -661,6 +741,33 @@
                 </div>
                 <div class="chart-container">
                     <canvas id="scoreChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Score Table -->
+            <div class="card">
+                <div class="section-header">
+                    <i class="fas fa-table"></i>
+                    <h2>Score Table</h2>
+                </div>
+                <div class="table-container">
+                    <table id="scoreTable" class="score-table">
+                        <thead>
+                            <tr>
+                                <th>Round</th>
+                                <!-- Player headers will be populated dynamically -->
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Rows will be populated dynamically -->
+                        </tbody>
+                        <tfoot>
+                            <tr class="total-row">
+                                <td><strong>Total</strong></td>
+                                <!-- Total scores will be populated dynamically -->
+                            </tr>
+                        </tfoot>
+                    </table>
                 </div>
             </div>
 
