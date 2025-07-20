@@ -318,6 +318,7 @@ function setupPlayer() {
     
     showGameInterface();
     updateGameStatus();
+    updateScoreTable();
     showMessage('Player setup complete!', 'success');
 }
 
@@ -376,6 +377,7 @@ function addPlayer() {
     updateGameStatus();
     updateScoreInputForm();
     updateAddPlayerColors();
+    updateScoreTable();
     showMessage(`Added ${playerName} to the game!`, 'success');
 }
 
@@ -455,6 +457,7 @@ function showGameInterface() {
     updateScoreChart();
     updateGameStatus();
     updateAddPlayerColors();
+    updateScoreTable();
 }
 
 
@@ -669,7 +672,7 @@ function updateScoreChart() {
 }
 
 function updateScoreTable() {
-    if (!currentGame || !currentGame.players.length) return;
+    if (!currentGame) return;
     
     const table = document.getElementById('scoreTable');
     const thead = table.querySelector('thead tr');
@@ -681,70 +684,94 @@ function updateScoreTable() {
     tbody.innerHTML = '';
     tfoot.innerHTML = '<td><strong>Total</strong></td>';
     
-    // Add player headers
-    currentGame.players.forEach(player => {
+    // Add player headers (even if no players yet)
+    if (currentGame.players.length > 0) {
+        currentGame.players.forEach(player => {
+            const th = document.createElement('th');
+            th.innerHTML = `
+                <div class="player-header">
+                    <div class="color-dot ${player.trainColor}"></div>
+                    <span>${player.name}</span>
+                </div>
+            `;
+            thead.appendChild(th);
+            
+            // Add total column
+            const totalTd = document.createElement('td');
+            totalTd.innerHTML = '<strong>0</strong>';
+            tfoot.appendChild(totalTd);
+        });
+    } else {
+        // Add placeholder header if no players
         const th = document.createElement('th');
-        th.innerHTML = `
-            <div class="player-header">
-                <div class="color-dot ${player.trainColor}"></div>
-                <span>${player.name}</span>
-            </div>
-        `;
+        th.textContent = 'Add Players';
         thead.appendChild(th);
         
-        // Add total column
         const totalTd = document.createElement('td');
-        totalTd.innerHTML = '<strong>0</strong>';
+        totalTd.innerHTML = '<strong>-</strong>';
         tfoot.appendChild(totalTd);
-    });
+    }
     
-    // Add round rows
-    currentGame.rounds.forEach(round => {
+    // Add all 13 rounds (Double 12 through Double Blank)
+    for (let roundNumber = 1; roundNumber <= 13; roundNumber++) {
         const row = document.createElement('tr');
         
         // Round name cell
         const roundCell = document.createElement('td');
-        roundCell.textContent = getRoundName(round.roundNumber);
+        roundCell.textContent = getRoundName(roundNumber);
         row.appendChild(roundCell);
         
         // Player score cells
-        currentGame.players.forEach(player => {
-            const scoreEntry = round.scores.find(s => s.playerId === player.id);
-            const score = scoreEntry ? scoreEntry.score : 0;
-            
+        if (currentGame.players.length > 0) {
+            currentGame.players.forEach(player => {
+                const round = currentGame.rounds.find(r => r.roundNumber === roundNumber);
+                const scoreEntry = round ? round.scores.find(s => s.playerId === player.id) : null;
+                const score = scoreEntry ? scoreEntry.score : '';
+                
+                const scoreCell = document.createElement('td');
+                scoreCell.className = 'score-cell';
+                scoreCell.textContent = score;
+                
+                // Highlight best and worst scores for this round (only if round exists)
+                if (round && round.scores.length > 0) {
+                    const roundScores = round.scores.map(s => s.score).filter(s => s > 0);
+                    if (roundScores.length > 0) {
+                        const minScore = Math.min(...roundScores);
+                        const maxScore = Math.max(...roundScores);
+                        
+                        if (score === minScore && score > 0) {
+                            scoreCell.classList.add('best');
+                        } else if (score === maxScore && score > 0) {
+                            scoreCell.classList.add('worst');
+                        }
+                    }
+                }
+                
+                row.appendChild(scoreCell);
+            });
+        } else {
+            // Add placeholder cell if no players
             const scoreCell = document.createElement('td');
             scoreCell.className = 'score-cell';
-            scoreCell.textContent = score;
-            
-            // Highlight best and worst scores for this round
-            const roundScores = round.scores.map(s => s.score).filter(s => s > 0);
-            if (roundScores.length > 0) {
-                const minScore = Math.min(...roundScores);
-                const maxScore = Math.max(...roundScores);
-                
-                if (score === minScore && score > 0) {
-                    scoreCell.classList.add('best');
-                } else if (score === maxScore && score > 0) {
-                    scoreCell.classList.add('worst');
-                }
-            }
-            
+            scoreCell.textContent = '-';
             row.appendChild(scoreCell);
-        });
+        }
         
         tbody.appendChild(row);
-    });
+    }
     
     // Calculate and display totals
-    currentGame.players.forEach((player, playerIndex) => {
-        const totalScore = currentGame.rounds.reduce((total, round) => {
-            const scoreEntry = round.scores.find(s => s.playerId === player.id);
-            return total + (scoreEntry ? scoreEntry.score : 0);
-        }, 0);
-        
-        const totalCell = tfoot.children[playerIndex + 1];
-        totalCell.innerHTML = `<strong>${totalScore}</strong>`;
-    });
+    if (currentGame.players.length > 0) {
+        currentGame.players.forEach((player, playerIndex) => {
+            const totalScore = currentGame.rounds.reduce((total, round) => {
+                const scoreEntry = round.scores.find(s => s.playerId === player.id);
+                return total + (scoreEntry ? scoreEntry.score : 0);
+            }, 0);
+            
+            const totalCell = tfoot.children[playerIndex + 1];
+            totalCell.innerHTML = `<strong>${totalScore}</strong>`;
+        });
+    }
 }
 
 function getColorForRound(roundIndex) {
