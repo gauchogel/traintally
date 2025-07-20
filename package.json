@@ -4,7 +4,6 @@
   "description": "Mexican Train score tracking web application for friends playing together",
   "main": "public/index.html",
   "scripts": {
-    "build": "node build-version.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": ["mexican train", "score tracker", "game", "dominoes"],

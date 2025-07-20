@@ -151,22 +151,21 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', fun
 
 // Version management
 function initializeVersion() {
-    // For now, always show version footer for debugging
     const hostname = window.location.hostname;
-    console.log('Version check:', { hostname }); // Debug log
     
-    // Get version from the injected commit hash
-    const versionHash = document.getElementById('versionHash');
+    // Generate version based on environment
     let version = 'dev';
-    
-    if (versionHash && versionHash.textContent) {
-        version = versionHash.textContent;
-    } else {
-        // Fallback to timestamp if no commit hash
-        version = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+    if (hostname.includes('pages.dev')) {
+        version = 'staging';
+    } else if (hostname === 'traintally.com') {
+        version = 'prod';
     }
     
-    console.log('Version:', version); // Debug log
+    // Update version display
+    const versionHash = document.getElementById('versionHash');
+    if (versionHash) {
+        versionHash.textContent = version;
+    }
     
     // Add click handler to show more info
     const versionFooter = document.getElementById('versionFooter');
@@ -175,9 +174,6 @@ function initializeVersion() {
             showVersionInfo(version);
         });
         versionFooter.style.cursor = 'pointer';
-        console.log('Version footer found and configured'); // Debug log
-    } else {
-        console.log('Version footer not found!'); // Debug log
     }
 }
 
