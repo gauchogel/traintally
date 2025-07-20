@@ -12,11 +12,50 @@
             box-sizing: border-box;
         }
 
+        :root {
+            /* Light mode variables */
+            --bg-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --bg-secondary: #ffffff;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --text-inverse: #ffffff;
+            --border-color: #e5e7eb;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --input-bg: #ffffff;
+            --input-border: #e5e7eb;
+            --btn-primary: #3b82f6;
+            --btn-primary-hover: #2563eb;
+            --btn-success: #10b981;
+            --btn-success-hover: #059669;
+            --game-info-bg: #f8fafc;
+            --score-row-bg: #f8fafc;
+        }
+
+        [data-theme="dark"] {
+            /* Dark mode variables */
+            --bg-primary: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+            --bg-secondary: #1f2937;
+            --text-primary: #f9fafb;
+            --text-secondary: #d1d5db;
+            --text-inverse: #1f2937;
+            --border-color: #374151;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            --input-bg: #374151;
+            --input-border: #4b5563;
+            --btn-primary: #3b82f6;
+            --btn-primary-hover: #60a5fa;
+            --btn-success: #10b981;
+            --btn-success-hover: #34d399;
+            --game-info-bg: #374151;
+            --score-row-bg: #374151;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--bg-primary);
             min-height: 100vh;
             padding: 20px;
+            transition: background 0.3s ease;
         }
 
         .container {
@@ -42,16 +81,17 @@
         }
 
         .card {
-            background: white;
+            background: var(--bg-secondary);
             border-radius: 12px;
             padding: 24px;
             margin-bottom: 24px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            border: 1px solid #e5e7eb;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
         }
 
         .card h2 {
-            color: #1f2937;
+            color: var(--text-primary);
             margin-bottom: 16px;
             font-size: 1.5rem;
         }
@@ -64,27 +104,29 @@
             display: block;
             margin-bottom: 8px;
             font-weight: 500;
-            color: #374151;
+            color: var(--text-primary);
         }
 
         .form-group input {
             width: 100%;
             padding: 12px;
-            border: 2px solid #e5e7eb;
+            border: 2px solid var(--input-border);
             border-radius: 8px;
             font-size: 16px;
             transition: border-color 0.2s;
+            background: var(--input-bg);
+            color: var(--text-primary);
         }
 
         .form-group input:focus {
             outline: none;
-            border-color: #3b82f6;
+            border-color: var(--btn-primary);
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
         .btn {
-            background: #3b82f6;
-            color: white;
+            background: var(--btn-primary);
+            color: var(--text-inverse);
             border: none;
             padding: 12px 24px;
             border-radius: 8px;
@@ -98,7 +140,7 @@
         }
 
         .btn:hover {
-            background: #2563eb;
+            background: var(--btn-primary-hover);
         }
 
         .btn:disabled {
@@ -107,11 +149,11 @@
         }
 
         .btn-success {
-            background: #10b981;
+            background: var(--btn-success);
         }
 
         .btn-success:hover {
-            background: #059669;
+            background: var(--btn-success-hover);
         }
 
         .color-grid {
@@ -190,27 +232,28 @@
             align-items: center;
             gap: 8px;
             padding: 12px;
-            border: 2px solid #e5e7eb;
+            border: 2px solid var(--border-color);
             border-radius: 8px;
             cursor: pointer;
             transition: all 0.2s;
-            background: white;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
         }
 
         .color-option:hover {
-            border-color: #3b82f6;
-            background: #f8fafc;
+            border-color: var(--btn-primary);
+            background: var(--game-info-bg);
         }
 
         .color-option.selected {
-            border-color: #3b82f6;
-            background: #eff6ff;
+            border-color: var(--btn-primary);
+            background: var(--game-info-bg);
         }
 
         .color-option.disabled {
             opacity: 0.5;
             cursor: not-allowed;
-            background: #f3f4f6;
+            background: var(--score-row-bg);
         }
 
         .color-option input[type="radio"] {
@@ -221,7 +264,7 @@
             width: 20px;
             height: 20px;
             border-radius: 50%;
-            border: 2px solid #e5e7eb;
+            border: 2px solid var(--border-color);
         }
 
         .color-dot.red { background-color: #ef4444; }
@@ -240,7 +283,7 @@
             gap: 12px;
             margin-bottom: 12px;
             padding: 12px;
-            background: #f8fafc;
+            background: var(--score-row-bg);
             border-radius: 8px;
         }
 
@@ -264,11 +307,11 @@
         }
 
         .game-info {
-            background: #f8fafc;
+            background: var(--game-info-bg);
             border-radius: 8px;
             padding: 16px;
             margin-bottom: 20px;
-            border-left: 4px solid #3b82f6;
+            border-left: 4px solid var(--btn-primary);
         }
 
         .game-id {
@@ -342,9 +385,90 @@
             margin-bottom: 16px;
             border: 1px solid #fecaca;
         }
+
+        /* Dark mode toggle */
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .theme-toggle:hover {
+            border-color: var(--btn-primary);
+        }
+
+        /* Enhanced mobile responsiveness */
+        @media (max-width: 768px) {
+            .theme-toggle {
+                top: 10px;
+                right: 10px;
+                padding: 6px 10px;
+                font-size: 12px;
+            }
+            
+            .game-info > div {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            .game-info button {
+                align-self: flex-start;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .theme-toggle {
+                top: 8px;
+                right: 8px;
+                padding: 4px 8px;
+                font-size: 11px;
+            }
+            
+            .game-info > div {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
+            }
+            
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            .section-header.clickable {
+                flex-direction: row;
+                justify-content: space-between;
+                width: 100%;
+            }
+            
+            .card > div[style*="grid"] {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- Dark Mode Toggle -->
+    <button class="theme-toggle" onclick="toggleTheme()">
+        <i class="fas fa-moon" id="theme-icon"></i>
+        <span id="theme-text">Dark</span>
+    </button>
+
     <div class="container">
         <div class="header">
             <h1><i class="fas fa-train"></i> Tally Train</h1>

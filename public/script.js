@@ -1,3 +1,6 @@
+// Theme management
+let currentTheme = localStorage.getItem('theme') || 'system';
+
 // Game state
 let currentGame = null;
 let currentPlayer = null;
@@ -19,6 +22,9 @@ const joinExistingForm = document.getElementById('joinExistingForm');
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize theme
+    initializeTheme();
+    
     // Check for game ID in URL
     const urlParams = new URLSearchParams(window.location.search);
     const gameId = urlParams.get('game');
@@ -34,6 +40,80 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize chart
     initializeChart();
+});
+
+// Theme functions
+function initializeTheme() {
+    applyTheme(currentTheme);
+    updateThemeButton();
+}
+
+function toggleTheme() {
+    const themes = ['light', 'dark', 'system'];
+    const currentIndex = themes.indexOf(currentTheme);
+    const nextIndex = (currentIndex + 1) % themes.length;
+    currentTheme = themes[nextIndex];
+    
+    localStorage.setItem('theme', currentTheme);
+    applyTheme(currentTheme);
+    updateThemeButton();
+}
+
+function applyTheme(theme) {
+    const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    
+    if (isDark) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+    } else {
+        document.documentElement.removeAttribute('data-theme');
+    }
+    
+    // Update chart colors if chart exists
+    if (window.scoreChart) {
+        updateChartTheme(isDark);
+    }
+}
+
+function updateThemeButton() {
+    const icon = document.getElementById('theme-icon');
+    const text = document.getElementById('theme-text');
+    
+    switch (currentTheme) {
+        case 'light':
+            icon.className = 'fas fa-sun';
+            text.textContent = 'Light';
+            break;
+        case 'dark':
+            icon.className = 'fas fa-moon';
+            text.textContent = 'Dark';
+            break;
+        case 'system':
+            icon.className = 'fas fa-desktop';
+            text.textContent = 'System';
+            break;
+    }
+}
+
+function updateChartTheme(isDark) {
+    if (!window.scoreChart) return;
+    
+    const textColor = isDark ? '#f9fafb' : '#1f2937';
+    const gridColor = isDark ? '#374151' : '#e5e7eb';
+    
+    window.scoreChart.options.plugins.title.color = textColor;
+    window.scoreChart.options.scales.x.grid.color = gridColor;
+    window.scoreChart.options.scales.y.grid.color = gridColor;
+    window.scoreChart.options.scales.x.ticks.color = textColor;
+    window.scoreChart.options.scales.y.ticks.color = textColor;
+    
+    window.scoreChart.update();
+}
+
+// Listen for system theme changes
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+    if (currentTheme === 'system') {
+        applyTheme('system');
+    }
 });
 
 function setupEventListeners() {
@@ -378,6 +458,11 @@ function updateScoreChart() {
         });
     });
     
+    // Get current theme colors
+    const isDark = document.documentElement.hasAttribute('data-theme');
+    const textColor = isDark ? '#f9fafb' : '#1f2937';
+    const gridColor = isDark ? '#374151' : '#e5e7eb';
+    
     // Create stacked horizontal bar chart
     window.scoreChart = new Chart(ctx, {
         type: 'bar',
@@ -445,11 +530,15 @@ function updateScoreChart() {
             plugins: {
                 title: {
                     display: true,
-                    text: 'Mexican Train Scores by Round'
+                    text: 'Mexican Train Scores by Round',
+                    color: textColor
                 },
                 legend: {
                     display: true,
-                    position: 'top'
+                    position: 'top',
+                    labels: {
+                        color: textColor
+                    }
                 },
                 tooltip: {
                     callbacks: {
@@ -463,6 +552,37 @@ function updateScoreChart() {
                             }, 0);
                             return `Total Score: ${totalScore}`;
                         }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    stacked: true,
+                    title: {
+                        display: true,
+                        text: 'Score',
+                        color: textColor
+                    },
+                    grid: {
+                        color: gridColor
+                    },
+                    ticks: {
+                        color: textColor
+                    }
+                },
+                y: {
+                    stacked: true,
+                    title: {
+                        display: true,
+                        text: 'Players',
+                        color: textColor
+                    },
+                    grid: {
+                        color: gridColor
+                    },
+                    ticks: {
+                        color: textColor
                     }
                 }
             }
@@ -535,6 +655,12 @@ function shareGame() {
 
 function initializeChart() {
     const ctx = document.getElementById('scoreChart').getContext('2d');
+    
+    // Get current theme colors
+    const isDark = document.documentElement.hasAttribute('data-theme');
+    const textColor = isDark ? '#f9fafb' : '#1f2937';
+    const gridColor = isDark ? '#374151' : '#e5e7eb';
+    
     window.scoreChart = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -548,16 +674,29 @@ function initializeChart() {
             plugins: {
                 title: {
                     display: true,
-                    text: 'Mexican Train Scores by Round'
+                    text: 'Mexican Train Scores by Round',
+                    color: textColor
                 }
             },
             scales: {
                 x: {
                     beginAtZero: true,
-                    stacked: true
+                    stacked: true,
+                    grid: {
+                        color: gridColor
+                    },
+                    ticks: {
+                        color: textColor
+                    }
                 },
                 y: {
-                    stacked: true
+                    stacked: true,
+                    grid: {
+                        color: gridColor
+                    },
+                    ticks: {
+                        color: textColor
+                    }
                 }
             }
         }
