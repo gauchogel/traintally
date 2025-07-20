@@ -793,10 +793,10 @@ function toggleAddPlayerSection() {
     
     if (section.style.display === 'none' || !section.style.display) {
         section.style.display = 'block';
-        toggle.innerHTML = '<i class="fas fa-times"></i> Close';
+        toggle.innerHTML = '<i class="fas fa-chevron-up"></i>';
     } else {
         section.style.display = 'none';
-        toggle.innerHTML = '<i class="fas fa-plus"></i> Add Player';
+        toggle.innerHTML = '<i class="fas fa-chevron-down"></i>';
     }
 }
 

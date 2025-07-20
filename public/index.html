@@ -714,13 +714,10 @@
 
             <!-- Add Player Section -->
             <div class="card">
-                <div class="section-header">
+                <div class="section-header clickable" onclick="toggleAddPlayerSection()">
                     <i class="fas fa-user-plus"></i>
                     <h2>Add Another Player</h2>
-                    <button class="btn btn-small" id="addPlayerToggle" onclick="toggleAddPlayerSection()" style="margin-left: auto;">
-                        <i class="fas fa-plus"></i>
-                        Add Player
-                    </button>
+                    <i class="fas fa-chevron-down" id="addPlayerToggle" style="margin-left: auto; transition: transform 0.2s;"></i>
                 </div>
                 <div id="addPlayerSection" style="display: none;">
                     <p style="margin-bottom: 16px; color: #6b7280;">Add friends who are playing but not on the app.</p>
