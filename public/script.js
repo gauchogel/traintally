@@ -192,37 +192,56 @@ function setupEventListeners() {
     // No longer needed with dropdown
 }
 
-function updateSetupColorDropdown() {
-    const dropdown = document.getElementById('setupTrainColor');
+function updateSetupColorGrid() {
+    const colorGrid = document.getElementById('setupColorGrid');
     const takenColors = currentGame ? currentGame.players.map(p => p.trainColor) : [];
     
-    // Clear existing options except the first one
-    dropdown.innerHTML = '<option value="">Choose a color...</option>';
-    
-    // Add available colors
-    trainColors.forEach(color => {
-        if (!takenColors.includes(color)) {
-            const option = document.createElement('option');
-            option.value = color;
-            option.textContent = `${getColorEmoji(color)} ${color.charAt(0).toUpperCase() + color.slice(1)}`;
-            dropdown.appendChild(option);
+    // Update each color option
+    colorGrid.querySelectorAll('.color-option').forEach(option => {
+        const color = option.dataset.color;
+        if (takenColors.includes(color)) {
+            option.classList.add('disabled');
+            option.classList.remove('selected');
+        } else {
+            option.classList.remove('disabled');
         }
     });
 }
 
-function getColorEmoji(color) {
-    const emojiMap = {
-        'red': '🔴',
-        'white': '⚪',
-        'green': '🟢',
-        'orange': '🟠',
-        'brown': '🟤',
-        'black': '⚫',
-        'blue': '🔵',
-        'pink': '🩷',
-        'yellow': '🟡'
-    };
-    return emojiMap[color] || '🎨';
+function setupColorSelection() {
+    // Use event delegation for better reliability
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.color-option')) {
+            const colorOption = e.target.closest('.color-option');
+            
+            // Don't allow selection of disabled colors
+            if (colorOption.classList.contains('disabled')) {
+                return;
+            }
+            
+            // Handle setup color grid
+            if (colorOption.closest('#setupColorGrid')) {
+                // Remove previous selection
+                document.querySelectorAll('#setupColorGrid .color-option').forEach(btn => {
+                    btn.classList.remove('selected');
+                });
+                
+                // Select this color
+                colorOption.classList.add('selected');
+            }
+            
+            // Handle add player color grid
+            if (colorOption.closest('#addPlayerColorGrid')) {
+                // Remove previous selection
+                document.querySelectorAll('#addPlayerColorGrid .color-option').forEach(btn => {
+                    btn.classList.remove('selected');
+                });
+                
+                // Select this color
+                colorOption.classList.add('selected');
+            }
+        }
+    });
 }
 
 function createGame() {
@@ -263,17 +282,19 @@ function joinExistingGame() {
 
 function setupPlayer() {
     const playerName = document.getElementById('setupPlayerName').value.trim();
-    const trainColor = document.getElementById('setupTrainColor').value;
+    const selectedColor = document.querySelector('#setupColorGrid .color-option.selected');
     
     if (!playerName) {
         showMessage('Please enter your name', 'error');
         return;
     }
     
-    if (!trainColor) {
+    if (!selectedColor) {
         showMessage('Please select a train color', 'error');
         return;
     }
+    
+    const trainColor = selectedColor.dataset.color;
     
     if (!currentGame) {
         showMessage('No game found', 'error');
@@ -302,17 +323,19 @@ function setupPlayer() {
 
 function addPlayer() {
     const playerName = document.getElementById('addPlayerName').value.trim();
-    const trainColor = document.getElementById('addPlayerColor').value;
+    const selectedColor = document.querySelector('#addPlayerColorGrid .color-option.selected');
     
     if (!playerName) {
         showMessage('Please enter a player name', 'error');
         return;
     }
     
-    if (!trainColor) {
+    if (!selectedColor) {
         showMessage('Please select a color', 'error');
         return;
     }
+    
+    const trainColor = selectedColor.dataset.color;
     
     if (!currentGame) {
         showMessage('No game found', 'error');
@@ -346,7 +369,9 @@ function addPlayer() {
     
     // Clear form
     document.getElementById('addPlayerName').value = '';
-    document.getElementById('addPlayerColor').value = '';
+    document.querySelectorAll('#addPlayerColorGrid .color-option').forEach(btn => {
+        btn.classList.remove('selected');
+    });
     
     updateGameStatus();
     updateScoreInputForm();
@@ -412,8 +437,9 @@ function showGameSetup() {
     // Auto-fill game ID
     document.getElementById('setupGameId').value = currentGame.id;
     
-    // Update available colors in dropdown
-    updateSetupColorDropdown();
+    // Update available colors and set up event listeners
+    updateSetupColorGrid();
+    setupColorSelection();
 }
 
 function showGameInterface() {
@@ -434,19 +460,23 @@ function showGameInterface() {
 
 
 function updateAddPlayerColors() {
-    const dropdown = document.getElementById('addPlayerColor');
+    const colorGrid = document.getElementById('addPlayerColorGrid');
     const takenColors = currentGame ? currentGame.players.map(p => p.trainColor) : [];
     
-    // Clear existing options except the first one
-    dropdown.innerHTML = '<option value="">Choose a color...</option>';
+    // Clear existing content
+    colorGrid.innerHTML = '';
     
     // Add available colors
     trainColors.forEach(color => {
         if (!takenColors.includes(color)) {
-            const option = document.createElement('option');
-            option.value = color;
-            option.textContent = `${getColorEmoji(color)} ${color.charAt(0).toUpperCase() + color.slice(1)}`;
-            dropdown.appendChild(option);
+            const colorOption = document.createElement('div');
+            colorOption.className = 'color-option';
+            colorOption.dataset.color = color;
+            colorOption.innerHTML = `
+                <div class="color-dot ${color}"></div>
+                <span>${color.charAt(0).toUpperCase() + color.slice(1)}</span>
+            `;
+            colorGrid.appendChild(colorOption);
         }
     });
 }
