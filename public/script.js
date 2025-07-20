@@ -258,7 +258,6 @@ function createGame() {
     saveGame(currentGame);
     
     showGameSetup();
-    updateGameStatus();
     
     showMessage('Game created successfully!', 'success');
 }
@@ -273,7 +272,6 @@ function joinExistingGame() {
     
     if (loadGame(gameId)) {
         showGameSetup();
-        updateGameStatus();
         showMessage('Game loaded successfully!', 'success');
     } else {
         showMessage('Game not found', 'error');
@@ -317,7 +315,6 @@ function setupPlayer() {
     saveGame(currentGame);
     
     showGameInterface();
-    updateGameStatus();
     updateScoreTable();
     updateScoreChart();
     showMessage('Player setup complete!', 'success');
@@ -375,7 +372,6 @@ function addPlayer() {
         btn.classList.remove('selected');
     });
     
-    updateGameStatus();
     updateScoreInputForm();
     updateAddPlayerColors();
     updateScoreTable();
@@ -430,7 +426,6 @@ function submitScores() {
     
     updateScoreChart();
     updateScoreTable();
-    updateGameStatus();
     showMessage(`Round ${roundNumber} scores submitted!`, 'success');
 }
 
@@ -458,7 +453,6 @@ function showGameInterface() {
     // Update forms and charts
     updateScoreInputForm();
     updateScoreChart();
-    updateGameStatus();
     updateAddPlayerColors();
     updateScoreTable();
 }
@@ -793,33 +787,16 @@ function getRoundName(roundNumber) {
     return `Round ${roundNumber}`;
 }
 
-function updateGameStatus() {
-    if (!currentGame) return;
-    
-    const availableColors = trainColors.filter(color => 
-        !currentGame.players.some(player => player.trainColor === color)
-    );
-    
-    const playersList = currentGame.players.map(player => 
-        `<span class="color-dot ${player.trainColor}"></span> ${player.name}`
-    ).join(', ');
-    
-    document.getElementById('availableColors').textContent = availableColors.join(', ');
-    document.getElementById('currentPlayers').innerHTML = playersList;
-    document.getElementById('playerCount').textContent = currentGame.players.length;
-    document.getElementById('currentRound').textContent = currentGame.rounds.length + 1;
-}
-
 function toggleAddPlayerSection() {
     const section = document.getElementById('addPlayerSection');
     const toggle = document.getElementById('addPlayerToggle');
     
     if (section.style.display === 'none' || !section.style.display) {
         section.style.display = 'block';
-        toggle.innerHTML = '<i class="fas fa-chevron-up"></i>';
+        toggle.innerHTML = '<i class="fas fa-times"></i> Close';
     } else {
         section.style.display = 'none';
-        toggle.innerHTML = '<i class="fas fa-chevron-down"></i>';
+        toggle.innerHTML = '<i class="fas fa-plus"></i> Add Player';
     }
 }
 

@@ -353,7 +353,7 @@
         .score-table td:first-child {
             text-align: left;
             font-weight: 600;
-            background: transparent;
+            background: transparent !important;
             color: var(--text-primary);
             position: sticky;
             left: 0;
@@ -376,7 +376,7 @@
         }
 
         .score-table .total-row td:first-child {
-            background: transparent;
+            background: transparent !important;
             color: var(--text-primary);
         }
 
@@ -703,10 +703,13 @@
 
             <!-- Add Player Section -->
             <div class="card">
-                <div class="section-header clickable" onclick="toggleAddPlayerSection()">
+                <div class="section-header">
                     <i class="fas fa-user-plus"></i>
                     <h2>Add Another Player</h2>
-                    <i class="fas fa-chevron-down" id="addPlayerToggle" style="margin-left: auto; transition: transform 0.2s;"></i>
+                    <button class="btn btn-small" id="addPlayerToggle" onclick="toggleAddPlayerSection()" style="margin-left: auto;">
+                        <i class="fas fa-plus"></i>
+                        Add Player
+                    </button>
                 </div>
                 <div id="addPlayerSection" style="display: none;">
                     <p style="margin-bottom: 16px; color: #6b7280;">Add friends who are playing but not on the app.</p>
@@ -779,23 +782,7 @@
                 </div>
             </div>
 
-            <!-- Game Status -->
-            <div class="card">
-                <div class="section-header">
-                    <i class="fas fa-info-circle"></i>
-                    <h2>Game Status</h2>
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
-                    <div>
-                        <h3 style="font-size: 1.125rem; margin-bottom: 12px; color: #374151;">Available Colors</h3>
-                        <div id="availableColors"></div>
-                    </div>
-                    <div>
-                        <h3 style="font-size: 1.125rem; margin-bottom: 12px; color: #374151;">Current Players</h3>
-                        <div id="currentPlayers"></div>
-                    </div>
-                </div>
-            </div>
+
         </div>
     </div>
 
