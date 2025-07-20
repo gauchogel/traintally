@@ -378,7 +378,7 @@ function updateScoreChart() {
         });
     });
     
-    // Create horizontal bar chart
+    // Create stacked horizontal bar chart
     window.scoreChart = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -402,12 +402,14 @@ function updateScoreChart() {
             scales: {
                 x: {
                     beginAtZero: true,
+                    stacked: true,
                     title: {
                         display: true,
                         text: 'Score'
                     }
                 },
                 y: {
+                    stacked: true,
                     title: {
                         display: true,
                         text: 'Players'
@@ -497,6 +499,15 @@ function initializeChart() {
                 title: {
                     display: true,
                     text: 'Mexican Train Scores by Round'
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    stacked: true
+                },
+                y: {
+                    stacked: true
                 }
             }
         }
