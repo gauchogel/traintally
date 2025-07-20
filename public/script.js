@@ -319,6 +319,7 @@ function setupPlayer() {
     showGameInterface();
     updateGameStatus();
     updateScoreTable();
+    updateScoreChart();
     showMessage('Player setup complete!', 'success');
 }
 
@@ -378,6 +379,7 @@ function addPlayer() {
     updateScoreInputForm();
     updateAddPlayerColors();
     updateScoreTable();
+    updateScoreChart();
     showMessage(`Added ${playerName} to the game!`, 'success');
 }
 
