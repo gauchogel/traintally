@@ -136,11 +136,18 @@ function selectColor(color) {
     document.querySelectorAll('.color-option').forEach(btn => {
         btn.classList.remove('selected');
         btn.disabled = false;
+        // Uncheck radio button
+        const radio = btn.querySelector('input[type="radio"]');
+        if (radio) radio.checked = false;
     });
     
     // Select new color
     const selectedButton = document.querySelector(`[data-color="${color}"]`);
     selectedButton.classList.add('selected');
+    
+    // Check the radio button
+    const radio = selectedButton.querySelector('input[type="radio"]');
+    if (radio) radio.checked = true;
     
     // Disable taken colors
     if (currentGame) {
@@ -148,6 +155,8 @@ function selectColor(color) {
             const colorBtn = document.querySelector(`[data-color="${player.trainColor}"]`);
             if (colorBtn && player.trainColor !== color) {
                 colorBtn.disabled = true;
+                const playerRadio = colorBtn.querySelector('input[type="radio"]');
+                if (playerRadio) playerRadio.disabled = true;
             }
         });
     }
@@ -396,10 +405,17 @@ function updateAddPlayerColors() {
             `;
             
             colorOption.addEventListener('click', function() {
+                // Remove previous selection
                 document.querySelectorAll('#addPlayerColorGrid .color-option').forEach(btn => {
                     btn.classList.remove('selected');
+                    const radio = btn.querySelector('input[type="radio"]');
+                    if (radio) radio.checked = false;
                 });
+                
+                // Select this color
                 this.classList.add('selected');
+                const radio = this.querySelector('input[type="radio"]');
+                if (radio) radio.checked = true;
             });
             
             colorGrid.appendChild(colorOption);
