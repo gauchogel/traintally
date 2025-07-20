@@ -429,6 +429,7 @@ function submitScores() {
     });
     
     updateScoreChart();
+    updateScoreTable();
     updateGameStatus();
     showMessage(`Round ${roundNumber} scores submitted!`, 'success');
 }
