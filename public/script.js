@@ -424,6 +424,9 @@ function showGameSetup() {
     
     // Update available colors
     updateAvailableColors();
+    
+    // Set up color selection for the game setup page
+    setupColorSelection();
 }
 
 function showGameInterface() {
