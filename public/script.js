@@ -121,18 +121,9 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', fun
 
 // Version management
 function initializeVersion() {
-    // Only show version on development/staging domains
+    // For now, always show version footer for debugging
     const hostname = window.location.hostname;
-    const isDevelopment = hostname.includes('pages.dev') || hostname.includes('localhost') || hostname.includes('127.0.0.1');
-    
-    if (!isDevelopment) {
-        // Hide version footer in production
-        const versionFooter = document.getElementById('versionFooter');
-        if (versionFooter) {
-            versionFooter.style.display = 'none';
-        }
-        return;
-    }
+    console.log('Version check:', { hostname }); // Debug log
     
     // Get version from the injected commit hash
     const versionHash = document.getElementById('versionHash');
@@ -145,6 +136,8 @@ function initializeVersion() {
         version = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
     }
     
+    console.log('Version:', version); // Debug log
+    
     // Add click handler to show more info
     const versionFooter = document.getElementById('versionFooter');
     if (versionFooter) {
@@ -152,6 +145,9 @@ function initializeVersion() {
             showVersionInfo(version);
         });
         versionFooter.style.cursor = 'pointer';
+        console.log('Version footer found and configured'); // Debug log
+    } else {
+        console.log('Version footer not found!'); // Debug log
     }
 }
 
