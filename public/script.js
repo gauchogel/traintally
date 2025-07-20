@@ -99,7 +99,14 @@ function updateThemeButton() {
 
 function updateChartTheme(isDark) {
     try {
-        if (!window.scoreChart || !window.scoreChart.options || !window.scoreChart.options.plugins) {
+        // More robust check for chart existence and structure
+        if (!window.scoreChart || 
+            typeof window.scoreChart !== 'object' || 
+            !window.scoreChart.options || 
+            typeof window.scoreChart.options !== 'object' ||
+            !window.scoreChart.options.plugins ||
+            typeof window.scoreChart.options.plugins !== 'object') {
+            console.log('Chart not ready for theme update');
             return;
         }
         
@@ -191,25 +198,19 @@ function setupEventListeners() {
 }
 
 function setupColorSelection() {
-    console.log('Setting up color selection...');
     const colorButtons = document.querySelectorAll('.color-option');
-    console.log('Found color buttons:', colorButtons.length);
     
     colorButtons.forEach(button => {
-        console.log('Adding click listener to:', button.dataset.color);
         button.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
             const color = this.dataset.color;
-            console.log('Color clicked:', color);
             selectColor(color);
         });
     });
 }
 
 function selectColor(color) {
-    console.log('selectColor called with:', color);
-    
     // Remove previous selection
     document.querySelectorAll('.color-option').forEach(btn => {
         btn.classList.remove('selected');
@@ -221,20 +222,15 @@ function selectColor(color) {
     
     // Select new color
     const selectedButton = document.querySelector(`[data-color="${color}"]`);
-    console.log('Selected button:', selectedButton);
     
     if (selectedButton) {
         selectedButton.classList.add('selected');
-        console.log('Added selected class to:', color);
         
         // Check the radio button
         const radio = selectedButton.querySelector('input[type="radio"]');
         if (radio) {
             radio.checked = true;
-            console.log('Checked radio button for:', color);
         }
-    } else {
-        console.error('Could not find button for color:', color);
     }
     
     // Disable taken colors
