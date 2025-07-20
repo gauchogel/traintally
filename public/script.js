@@ -552,6 +552,10 @@ function updateScoreChart() {
                 ctx.font = '12px Arial';
                 ctx.fillStyle = '#333';
                 
+                // Get chart area boundaries
+                const chartArea = chart.chartArea;
+                const maxX = chartArea.right - 10; // Leave 10px margin
+                
                 // Calculate and display total scores
                 currentGame.players.forEach((player, playerIndex) => {
                     const totalScore = currentGame.rounds.reduce((total, round) => {
@@ -562,10 +566,20 @@ function updateScoreChart() {
                     if (totalScore > 0) {
                         const meta = chart.getDatasetMeta(0);
                         const bar = meta.data[playerIndex];
-                        const x = bar.x + 5; // Position text slightly to the right of the bar
+                        const text = `Total: ${totalScore}`;
+                        
+                        // Calculate text width to check if it fits
+                        const textWidth = ctx.measureText(text).width;
+                        let x = bar.x + 5; // Default position
+                        
+                        // If text would go beyond chart area, position it inside the bar
+                        if (x + textWidth > maxX) {
+                            x = Math.max(bar.x - textWidth - 5, chartArea.left + 5);
+                        }
+                        
                         const y = bar.y;
                         
-                        ctx.fillText(`Total: ${totalScore}`, x, y);
+                        ctx.fillText(text, x, y);
                     }
                 });
             }
