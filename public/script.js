@@ -25,6 +25,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize theme
     initializeTheme();
     
+    // Initialize version display
+    initializeVersion();
+    
     // Check for game ID in URL
     const urlParams = new URLSearchParams(window.location.search);
     const gameId = urlParams.get('game');
@@ -115,6 +118,53 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', fun
         applyTheme('system');
     }
 });
+
+// Version management
+function initializeVersion() {
+    // Only show version on development/staging domains
+    const hostname = window.location.hostname;
+    const isDevelopment = hostname.includes('pages.dev') || hostname.includes('localhost') || hostname.includes('127.0.0.1');
+    
+    if (!isDevelopment) {
+        // Hide version footer in production
+        const versionFooter = document.getElementById('versionFooter');
+        if (versionFooter) {
+            versionFooter.style.display = 'none';
+        }
+        return;
+    }
+    
+    // Get version from the injected commit hash
+    const versionHash = document.getElementById('versionHash');
+    let version = 'dev';
+    
+    if (versionHash && versionHash.textContent) {
+        version = versionHash.textContent;
+    } else {
+        // Fallback to timestamp if no commit hash
+        version = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+    }
+    
+    // Add click handler to show more info
+    const versionFooter = document.getElementById('versionFooter');
+    if (versionFooter) {
+        versionFooter.addEventListener('click', function() {
+            showVersionInfo(version);
+        });
+        versionFooter.style.cursor = 'pointer';
+    }
+}
+
+function showVersionInfo(version) {
+    const info = `
+Version: ${version}
+Domain: ${window.location.hostname}
+Environment: ${window.location.hostname.includes('pages.dev') ? 'Cloudflare Pages' : 'Development'}
+Build Time: ${new Date().toLocaleString()}
+    `.trim();
+    
+    alert(info);
+}
 
 function setupEventListeners() {
     // Color selection
