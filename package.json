@@ -1,16 +1,30 @@
 {
   "name": "tally-train",
   "version": "1.0.0",
-  "description": "Mexican Train score tracking web application for friends playing together",
-  "main": "public/index.html",
+  "description": "Mexican Train score tracking app with real-time multiplayer",
+  "main": "src/index.js",
   "scripts": {
-    "build": "echo \"Static site - no build needed\"",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "npx wrangler dev",
+    "deploy": "npx wrangler deploy",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "echo 'No build step required'"
   },
-  "keywords": ["mexican train", "score tracker", "game", "dominoes"],
-  "author": "",
-  "license": "ISC",
-  "engines": {
-    "node": ">=16.0.0"
+  "keywords": [
+    "mexican-train",
+    "game",
+    "score-tracking",
+    "multiplayer"
+  ],
+  "author": "Scott Vogelgesang",
+  "license": "MIT",
+  "devDependencies": {
+    "wrangler": "^4.25.0"
+  },
+  "dependencies": {
+    "@cloudflare/kv-asset-handler": "^0.4.0",
+    "@tailwindcss/forms": "^0.5.10",
+    "chart.js": "^4.5.0",
+    "lucide-react": "^0.525.0",
+    "tailwindcss": "^4.1.11"
   }
 }

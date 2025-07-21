@@ -1,2 +1,1 @@
-name = "traintally"
-pages_build_output_dir = "public" 
+# No longer needed for pure frontend deployment. You can delete this file or leave it empty if not using Wrangler. 

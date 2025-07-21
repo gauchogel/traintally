@@ -4,804 +4,403 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tally Train - Mexican Train Score Tracker</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚂</text></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script>
+        tailwind.config = {
+            // Removed darkMode and theme config
+        }
+    </script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         :root {
-            /* Light mode variables */
-            --bg-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --bg-secondary: #ffffff;
-            --text-primary: #1f2937;
-            --text-secondary: #6b7280;
-            --text-inverse: #ffffff;
-            --border-color: #e5e7eb;
-            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            --input-bg: #ffffff;
-            --input-border: #e5e7eb;
-            --btn-primary: #3b82f6;
-            --btn-primary-hover: #2563eb;
-            --btn-success: #10b981;
-            --btn-success-hover: #059669;
-            --game-info-bg: #f8fafc;
-            --score-row-bg: #f8fafc;
+            --background: 0 0% 100%;
+            --foreground: 222.2 84% 4.9%;
+            --card: 0 0% 100%;
+            --card-foreground: 222.2 84% 4.9%;
+            --popover: 0 0% 100%;
+            --popover-foreground: 222.2 84% 4.9%;
+            --primary: 221.2 83.2% 53.3%;
+            --primary-foreground: 210 40% 98%;
+            --secondary: 210 40% 96%;
+            --secondary-foreground: 222.2 84% 4.9%;
+            --muted: 210 40% 96%;
+            --muted-foreground: 215.4 16.3% 46.9%;
+            --accent: 210 40% 96%;
+            --accent-foreground: 222.2 84% 4.9%;
+            --destructive: 0 84.2% 60.2%;
+            --destructive-foreground: 210 40% 98%;
+            --border: 214.3 31.8% 91.4%;
+            --input: 214.3 31.8% 91.4%;
+            --ring: 221.2 83.2% 53.3%;
+            --radius: 0.5rem;
         }
-
         [data-theme="dark"] {
-            /* Dark mode variables */
-            --bg-primary: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
-            --bg-secondary: #1f2937;
-            --text-primary: #f9fafb;
-            --text-secondary: #d1d5db;
-            --text-inverse: #1f2937;
-            --border-color: #374151;
-            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            --input-bg: #374151;
-            --input-border: #4b5563;
-            --btn-primary: #3b82f6;
-            --btn-primary-hover: #60a5fa;
-            --btn-success: #10b981;
-            --btn-success-hover: #34d399;
-            --game-info-bg: #374151;
-            --score-row-bg: #374151;
+            --background: 222.2 84% 4.9%;
+            --foreground: 210 40% 98%;
+            --card: 222.2 84% 4.9%;
+            --card-foreground: 210 40% 98%;
+            --popover: 222.2 84% 4.9%;
+            --popover-foreground: 210 40% 98%;
+            --primary: 217.2 91.2% 59.8%;
+            --primary-foreground: 222.2 84% 4.9%;
+            --secondary: 217.2 32.6% 17.5%;
+            --secondary-foreground: 210 40% 98%;
+            --muted: 217.2 32.6% 17.5%;
+            --muted-foreground: 215 20.2% 65.1%;
+            --accent: 217.2 32.6% 17.5%;
+            --accent-foreground: 210 40% 98%;
+            --destructive: 0 62.8% 30.6%;
+            --destructive-foreground: 210 40% 98%;
+            --border: 217.2 32.6% 17.5%;
+            --input: 217.2 32.6% 17.5%;
+            --ring: 224.3 76.3% 94.1%;
+        }
+        [data-theme="light"] {
+            --background: 0 0% 100%;
+            --foreground: 222.2 84% 4.9%;
+            --card: 0 0% 100%;
+            --card-foreground: 222.2 84% 4.9%;
+            --popover: 0 0% 100%;
+            --popover-foreground: 222.2 84% 4.9%;
+            --primary: 221.2 83.2% 53.3%;
+            --primary-foreground: 210 40% 98%;
+            --secondary: 210 40% 96%;
+            --secondary-foreground: 222.2 84% 4.9%;
+            --muted: 210 40% 96%;
+            --muted-foreground: 215.4 16.3% 46.9%;
+            --accent: 210 40% 96%;
+            --accent-foreground: 222.2 84% 4.9%;
+            --destructive: 0 84.2% 60.2%;
+            --destructive-foreground: 210 40% 98%;
+            --border: 214.3 31.8% 91.4%;
+            --input: 214.3 31.8% 91.4%;
+            --ring: 221.2 83.2% 53.3%;
+        }
+        /* Removed .dark class and any dark mode CSS */
+
+        * {
+            border-color: hsl(var(--border));
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--bg-primary);
-            min-height: 100vh;
-            padding: 20px;
-            transition: background 0.3s ease;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-            color: white;
-        }
-
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
-        }
-
-        .card {
-            background: var(--bg-secondary);
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 24px;
-            box-shadow: var(--card-shadow);
-            border: 1px solid var(--border-color);
-            transition: all 0.3s ease;
-        }
-
-        .card h2 {
-            color: var(--text-primary);
-            margin-bottom: 16px;
-            font-size: 1.5rem;
-        }
-
-        .form-group {
-            margin-bottom: 16px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: var(--text-primary);
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid var(--input-border);
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.2s;
-            background: var(--input-bg);
-            color: var(--text-primary);
-        }
-
-        .form-group input:focus {
-            outline: none;
-            border-color: var(--btn-primary);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-
-
-
-        .btn {
-            background: var(--btn-primary);
-            color: var(--text-inverse);
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn:hover {
-            background: var(--btn-primary-hover);
-        }
-
-        .btn:disabled {
-            background: #9ca3af;
-            cursor: not-allowed;
-        }
-
-        .btn-success {
-            background: var(--btn-success);
-        }
-
-        .btn-success:hover {
-            background: var(--btn-success-hover);
-        }
-
-        .color-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            margin-bottom: 20px;
-            justify-items: center;
-        }
-
-        /* Mobile responsive adjustments */
-        @media (max-width: 480px) {
-            .color-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 8px;
-                max-width: 100%;
-                margin: 0 auto 20px auto;
-            }
-            
-            .color-option {
-                padding: 8px;
-                font-size: 0.9rem;
-                min-width: 100px;
-                width: 100%;
-                max-width: 140px;
-                justify-content: center;
-            }
-            
-            .color-dot {
-                width: 16px;
-                height: 16px;
-            }
-        }
-
-        @media (max-width: 360px) {
-            .color-grid {
-                grid-template-columns: 1fr;
-                gap: 6px;
-            }
-            
-            .color-option {
-                max-width: 200px;
-                justify-content: center;
-            }
-        }
-
-        /* General mobile responsive adjustments */
-        @media (max-width: 480px) {
-            body {
-                padding: 16px;
-            }
-            
-            .container {
-                padding: 0;
-            }
-            
-            .card {
-                padding: 16px;
-                margin-bottom: 16px;
-            }
-            
-            .header h1 {
-                font-size: 1.8rem;
-            }
-            
-            .header p {
-                font-size: 1rem;
-            }
-            
-            .btn {
-                padding: 10px 20px;
-                font-size: 14px;
-            }
+            background-color: hsl(var(--background));
+            color: hsl(var(--foreground));
         }
 
         .color-option {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 12px;
-            border: 2px solid var(--border-color);
-            border-radius: 8px;
+            width: 40px;
+            height: 40px;
+            border: 2px solid hsl(var(--border));
+            border-radius: var(--radius);
             cursor: pointer;
-            transition: all 0.2s;
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            min-width: 120px;
-            width: 100%;
-            text-align: center;
+            transition: all 0.2s ease;
         }
 
         .color-option:hover {
-            border-color: var(--btn-primary);
-            background: var(--game-info-bg);
+            transform: scale(1.1);
         }
 
         .color-option.selected {
-            border-color: var(--btn-primary);
-            background: var(--game-info-bg);
+            border-color: hsl(var(--primary));
+            box-shadow: 0 0 0 3px hsl(var(--primary) / 0.2);
         }
 
-        .color-option.disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            background: var(--score-row-bg);
-        }
-
-        .color-option input[type="radio"] {
-            display: none;
-        }
-
-        .color-dot {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            border: 2px solid var(--border-color);
-        }
-
-        .color-dot.red { background-color: #ef4444; }
-        .color-dot.white { background-color: #ffffff; border-color: #d1d5db; }
-        .color-dot.green { background-color: #10b981; }
-        .color-dot.orange { background-color: #f97316; }
-        .color-dot.brown { background-color: #78716c; }
-        .color-dot.black { background-color: #374151; }
-        .color-dot.blue { background-color: #3b82f6; }
-        .color-dot.pink { background-color: #ec4899; }
-        .color-dot.yellow { background-color: #eab308; }
-
-        .score-input-row {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-
-        .score-input-row label {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            min-width: 120px;
-            font-weight: 500;
-            color: var(--text-primary);
-        }
-
-        .score-input-row input {
-            flex: 1;
-            max-width: 200px;
-            padding: 12px;
-            border: 2px solid var(--input-border);
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.2s;
-            background: var(--input-bg);
-            color: var(--text-primary);
-        }
-
-        .score-input-row input:focus {
-            outline: none;
-            border-color: var(--btn-primary);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-
-        .chart-container {
-            position: relative;
-            height: 400px;
-            margin-top: 20px;
-        }
-
-        .table-container {
-            overflow-x: auto;
-            margin-top: 16px;
-        }
-
-        .score-table {
-            width: 100%;
-            border-collapse: collapse;
-            background: transparent;
-            border-radius: 8px;
+        .toggle-content {
+            max-height: 0;
             overflow: hidden;
-            box-shadow: var(--card-shadow);
-            border: 1px solid var(--border-color);
+            transition: max-height 0.3s ease;
         }
 
-        .score-table th,
-        .score-table td {
-            padding: 12px;
+        .toggle-content.expanded {
+            max-height: 500px;
+        }
+
+        .score-input {
+            width: 80px;
+            padding: 0.5rem;
+            border: 1px solid hsl(var(--border));
+            border-radius: var(--radius);
+            background-color: hsl(var(--background));
+            color: hsl(var(--foreground));
             text-align: center;
-            border: 1px solid var(--border-color);
-            font-size: 14px;
         }
-
-        .score-table th {
-            background: transparent;
-            color: var(--text-primary);
-            font-weight: 600;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            position: sticky;
-            top: 0;
-            z-index: 10;
+        .player-row {
+            background-color: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
+            color: hsl(var(--foreground));
         }
-
-        .score-table th:first-child,
-        .score-table td:first-child {
-            text-align: left;
-            font-weight: 600;
-            background: transparent !important;
-            color: var(--text-primary);
-            position: sticky;
-            left: 0;
-            z-index: 5;
+        
+        /* Color dots for train colors */
+        .color-dot {
+            width: 32px;
+            height: 32px;
+            border-radius: 0.5rem;
+            display: block;
+            margin: 0 auto 8px auto;
+            border: 2px solid hsl(var(--border));
+            box-sizing: border-box;
         }
-
-        .score-table tbody tr:nth-child(even) {
-            background: transparent;
+        
+        /* Removed .color-dot.red, .color-dot.green, etc. color classes */
+        
+        /* Score table styling */
+        .score-cell {
+            text-align: center;
+            padding: 8px;
+            border: 1px solid hsl(var(--border));
         }
-
-        .score-table tbody tr:hover {
-            background: transparent;
+        
+        .score-cell.best {
+            background-color: hsl(var(--success) / 0.1);
+            color: hsl(var(--success));
+            font-weight: bold;
         }
-
-        .score-table .total-row {
-            background: transparent;
-            color: var(--text-primary);
-            font-weight: 700;
-            font-size: 15px;
+        
+        .score-cell.worst {
+            background-color: hsl(var(--destructive) / 0.1);
+            color: hsl(var(--destructive));
+            font-weight: bold;
         }
-
-        .score-table .total-row td:first-child {
-            background: transparent !important;
-            color: var(--text-primary);
-        }
-
+        
         .player-header {
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
         }
-
-        .score-cell {
-            font-weight: 600;
-            font-size: 15px;
+        input[readonly] {
+            background-color: hsl(var(--background)) !important;
+            color: hsl(var(--foreground)) !important;
+            opacity: 1 !important;
         }
-
-        .score-cell.best {
-            color: var(--text-primary);
-            font-weight: 700;
+        select {
+            background-color: hsl(var(--background)) !important;
+            color: hsl(var(--foreground)) !important;
+            border: 1px solid hsl(var(--border)) !important;
         }
-
-        .score-cell.worst {
-            color: var(--text-primary);
-            font-weight: 700;
+        input,
+        select {
+            color: hsl(var(--foreground)) !important;
         }
-
-        .game-info {
-            background: var(--game-info-bg);
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 20px;
-            border-left: 4px solid var(--btn-primary);
+        input::placeholder {
+            color: hsl(var(--muted-foreground)) !important;
+            opacity: 1 !important;
         }
-
-        .game-id {
-            font-family: 'Monaco', 'Menlo', monospace;
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #3b82f6;
-        }
-
-        .btn-small {
-            padding: 4px 8px;
-            font-size: 0.75rem;
-            background: #6b7280;
-        }
-
-        .btn-small:hover {
-            background: #4b5563;
-        }
-
-        .section-header {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-
-        .section-header i {
-            color: #6b7280;
-            font-size: 1.25rem;
-        }
-
-        .section-header h2 {
-            margin: 0;
-            font-size: 1.5rem;
-        }
-
-        .section-header.clickable {
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .section-header.clickable:hover {
-            background: #f8fafc;
-            border-radius: 6px;
-            padding: 8px;
-            margin: -8px;
-        }
-
-        #mainPage, #gameSetup, #gameInterface {
-            display: none;
-        }
-
-        #mainPage {
-            display: block;
-        }
-
-        .success {
-            background: #f0fdf4;
-            color: #16a34a;
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 16px;
-            border: 1px solid #bbf7d0;
-        }
-
-        .error {
-            background: #fef2f2;
-            color: #dc2626;
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 16px;
-            border: 1px solid #fecaca;
-        }
-
-        /* Dark mode toggle */
-        .theme-toggle {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
-            background: var(--bg-secondary);
-            border: 2px solid var(--border-color);
-            border-radius: 8px;
-            padding: 8px 12px;
-            color: var(--text-primary);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .theme-toggle:hover {
-            border-color: var(--btn-primary);
-        }
-
-        /* Version footer */
-        .version-footer {
-            position: fixed;
-            bottom: 10px;
-            right: 10px;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 4px 8px;
-            font-size: 11px;
-            color: var(--text-secondary);
-            font-family: 'Monaco', 'Menlo', monospace;
-            z-index: 999;
-            opacity: 0.9;
-            transition: opacity 0.2s;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .version-footer:hover {
-            opacity: 1;
-        }
-
-        /* Enhanced mobile responsiveness */
-        @media (max-width: 768px) {
-            .theme-toggle {
-                top: 10px;
-                right: 10px;
-                padding: 6px 10px;
-                font-size: 12px;
-            }
-            
-            .game-info > div {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 8px;
-            }
-            
-            .game-info button {
-                align-self: flex-start;
-            }
-            
-            .version-footer {
-                bottom: 5px;
-                right: 5px;
-                font-size: 10px;
-                padding: 3px 6px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .theme-toggle {
-                top: 8px;
-                right: 8px;
-                padding: 4px 8px;
-                font-size: 11px;
-            }
-            
-            .game-info > div {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 6px;
-            }
-            
-            .section-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 8px;
-            }
-            
-            .section-header.clickable {
-                flex-direction: row;
-                justify-content: space-between;
-                width: 100%;
-            }
-            
-            .card > div[style*="grid"] {
-                grid-template-columns: 1fr;
-                gap: 16px;
-            }
+        [data-theme="dark"] input::placeholder {
+            color: #cbd5e1 !important;
         }
     </style>
 </head>
-<body>
-    <!-- Dark Mode Toggle -->
-    <button class="theme-toggle" onclick="toggleTheme()">
-        <i class="fas fa-moon" id="theme-icon"></i>
-        <span id="theme-text">Dark</span>
-    </button>
-
-    <div class="container">
-        <div class="header">
-            <h1><i class="fas fa-train"></i> Tally Train</h1>
-            <p>Mexican Train Score Tracker for Friends</p>
-        </div>
-
-        <!-- Main Page -->
-        <div id="mainPage">
-            <div class="card">
-                <h2><i class="fas fa-plus-circle"></i> Create New Game</h2>
-                <p style="margin-bottom: 16px; color: #6b7280;">Start a new Mexican Train game and invite friends to join.</p>
-                <button class="btn btn-success" onclick="createGame()">
-                    <i class="fas fa-plus"></i>
-                    Create Game
-                </button>
+<body class="min-h-screen bg-background">
+    <div class="container mx-auto p-2 sm:p-4 max-w-6xl">
+        <!-- Header -->
+        <header class="flex flex-col sm:flex-row items-center justify-between mb-8 gap-y-2">
+            <div class="flex items-center space-x-2">
+                <i data-lucide="train" class="w-8 h-8 text-primary"></i>
+                <h1 class="text-3xl font-bold text-foreground">Tally Train</h1>
             </div>
-
-            <div class="card">
-                <h2><i class="fas fa-sign-in-alt"></i> Join Existing Game</h2>
-                <p style="margin-bottom: 16px; color: #6b7280;">Enter a Game ID to join an existing game.</p>
-                <div class="form-group">
-                    <label for="existingGameId">Game ID</label>
-                    <input type="text" id="existingGameId" placeholder="Enter Game ID (e.g., ABC123)">
-                </div>
-                <button class="btn btn-success" onclick="joinExistingGame()">
-                    <i class="fas fa-sign-in-alt"></i>
-                    Join Game
+            <div class="flex items-center space-x-4">
+                <button id="themeToggle" class="p-2 rounded-md hover:bg-accent transition-colors flex items-center gap-2">
+                    <i id="themeIcon" class="w-5 h-5"></i>
+                    <span id="themeLabel" class="text-sm font-medium"></span>
                 </button>
+                <!-- Removed version info -->
             </div>
-        </div>
+        </header>
 
-        <!-- Game Setup -->
-        <div id="gameSetup">
-            <div class="card">
-                <h2><i class="fas fa-user-edit"></i> Set Up Your Player</h2>
-                <div class="form-group">
-                    <label for="setupGameId">Game ID</label>
-                    <input type="text" id="setupGameId" readonly>
+        <!-- Main Content -->
+        <main>
+            <!-- Main Page -->
+            <div id="mainPage" class="space-y-6">
+                <div class="text-center space-y-4">
+                    <h2 class="text-2xl font-semibold text-foreground">Mexican Train Score Tracker</h2>
+                    <p class="text-muted-foreground">Track scores and compete with friends in real-time</p>
                 </div>
-                <div class="form-group">
-                    <label for="setupPlayerName">Your Name</label>
-                    <input type="text" id="setupPlayerName" placeholder="Enter your name">
-                </div>
-                <div class="form-group">
-                    <label>Select Your Train Color</label>
-                    <div class="color-grid" id="setupColorGrid">
-                        <div class="color-option" data-color="red">
-                            <div class="color-dot red"></div>
-                            <span>Red</span>
-                        </div>
-                        <div class="color-option" data-color="white">
-                            <div class="color-dot white"></div>
-                            <span>White</span>
-                        </div>
-                        <div class="color-option" data-color="green">
-                            <div class="color-dot green"></div>
-                            <span>Green</span>
-                        </div>
-                        <div class="color-option" data-color="orange">
-                            <div class="color-dot orange"></div>
-                            <span>Orange</span>
-                        </div>
-                        <div class="color-option" data-color="brown">
-                            <div class="color-dot brown"></div>
-                            <span>Brown</span>
-                        </div>
-                        <div class="color-option" data-color="black">
-                            <div class="color-dot black"></div>
-                            <span>Black</span>
-                        </div>
-                        <div class="color-option" data-color="blue">
-                            <div class="color-dot blue"></div>
-                            <span>Blue</span>
-                        </div>
-                        <div class="color-option" data-color="pink">
-                            <div class="color-dot pink"></div>
-                            <span>Pink</span>
-                        </div>
-                        <div class="color-option" data-color="yellow">
-                            <div class="color-dot yellow"></div>
-                            <span>Yellow</span>
-                        </div>
-                    </div>
-                </div>
-                <button class="btn btn-success" onclick="setupPlayer()">
-                    <i class="fas fa-check"></i>
-                    Start Game
-                </button>
-            </div>
-        </div>
 
-        <!-- Game Interface -->
-        <div id="gameInterface">
-            <div class="card">
-                <div class="game-info">
-                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
-                        <strong>Game ID:</strong> 
-                        <span class="game-id" id="gameIdDisplay"></span>
-                        <button class="btn btn-small" onclick="shareGame()">
-                            <i class="fas fa-share-alt"></i>
-                            Share
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Create New Game -->
+                    <div class="bg-card border rounded-md sm:rounded-lg p-2 sm:p-6 flex flex-col h-full w-full max-w-full">
+                        <div class="flex items-center space-x-2 mb-4">
+                            <i data-lucide="plus-circle" class="w-5 h-5 text-primary"></i>
+                            <h3 class="text-lg font-semibold">Create New Game</h3>
+                        </div>
+                        <p class="text-muted-foreground mb-4">Start a new Mexican Train game and invite friends to join</p>
+                        <button onclick="createGame()" class="w-full bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-md font-medium transition-colors mt-auto">
+                            Create Game
                         </button>
                     </div>
-                    <strong>Players:</strong> <span id="playerCount">0</span>/8
-                </div>
-            </div>
 
-            <!-- Add Player Section -->
-            <div class="card">
-                <div class="section-header clickable" onclick="toggleAddPlayerSection()">
-                    <i class="fas fa-user-plus"></i>
-                    <h2>Add Another Player</h2>
-                    <i class="fas fa-chevron-down" id="addPlayerToggle" style="margin-left: auto; transition: transform 0.2s;"></i>
-                </div>
-                <div id="addPlayerSection" style="display: none;">
-                    <p style="margin-bottom: 16px; color: #6b7280;">Add friends who are playing but not on the app.</p>
-                    <div class="form-group">
-                        <label for="addPlayerName">Player Name</label>
-                        <input type="text" id="addPlayerName" placeholder="Enter player name">
-                    </div>
-                    <div class="form-group">
-                        <label>Select Their Color</label>
-                        <div class="color-grid" id="addPlayerColorGrid">
-                            <!-- Color options will be populated dynamically -->
+                    <!-- Join Existing Game -->
+                    <div class="bg-card border rounded-md sm:rounded-lg p-2 sm:p-6 flex flex-col h-full w-full max-w-full">
+                        <div class="flex items-center space-x-2 mb-4">
+                            <i data-lucide="users" class="w-5 h-5 text-primary"></i>
+                            <h3 class="text-lg font-semibold">Join Game</h3>
+                        </div>
+                        <p class="text-muted-foreground mb-4">Enter a game ID to join an existing game</p>
+                        <div class="space-y-3 flex-1 flex flex-col">
+                            <input type="text" id="existingGameId" placeholder="Enter Game ID" 
+                                   class="w-full px-3 py-2 border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring">
+                            <button onclick="joinExistingGame()" class="w-full bg-gray-200 text-gray-900 hover:bg-gray-300 px-4 py-2 rounded-md font-medium transition-colors mt-auto">
+                                Join Game
+                            </button>
                         </div>
                     </div>
-                    <button class="btn btn-success" onclick="addPlayer()">
-                        <i class="fas fa-plus-circle"></i>
-                        Add Player
+                </div>
+            </div>
+
+            <!-- Game Setup -->
+            <div id="gameSetup" class="hidden space-y-6">
+                <div class="bg-card border rounded-md sm:rounded-lg p-2 sm:p-6 w-full max-w-full">
+                    <div class="flex items-center space-x-2 mb-4">
+                        <i data-lucide="settings" class="w-5 h-5 text-primary"></i>
+                        <h3 class="text-lg font-semibold">Game Setup</h3>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Game ID</label>
+                            <input type="text" id="setupGameId" readonly 
+                                   class="w-full px-3 py-2 border rounded-md bg-background text-foreground">
+                        </div>
+                        <div id="playerListSection">
+                            <!-- Player rows will be rendered here by JavaScript -->
+                        </div>
+                        <button id="addPlayerRow" type="button" class="mt-2 mb-2 px-4 py-2 bg-gray-200 text-gray-900 rounded-md font-medium hover:bg-gray-300 w-full">+ Player</button>
+                        <button onclick="setupPlayer()" class="w-full bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-md font-medium transition-colors">
+                            Start Game
+                        </button>
+                        <div id="playerSetupError" class="text-red-600 text-sm mt-2"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Game Interface -->
+            <div id="gameInterface" class="hidden space-y-6">
+                <!-- Game Info -->
+                <div class="bg-card border rounded-md sm:rounded-lg p-2 sm:p-6 w-full max-w-full">
+                    <div class="flex items-center justify-between flex-col sm:flex-row gap-y-2">
+                        <div class="flex items-center space-x-2">
+                            <i data-lucide="gamepad-2" class="w-5 h-5 text-primary"></i>
+                            <h3 class="text-lg font-semibold">Game ID: <span id="gameIdDisplay" class="font-mono text-primary"></span></h3>
+                        </div>
+                        <button onclick="shareGame()" class="flex items-center space-x-2 bg-gray-200 text-gray-900 hover:bg-gray-300 px-3 py-2 rounded-md text-sm transition-colors">
+                            <i data-lucide="share" class="w-4 h-4"></i>
+                            <span>Share</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Score Chart -->
+                <div class="bg-card border rounded-md sm:rounded-lg p-2 sm:p-6 w-full max-w-full">
+                    <div class="flex items-center space-x-2 mb-4">
+                        <i data-lucide="bar-chart-3" class="w-5 h-5 text-primary"></i>
+                        <h3 class="text-lg font-semibold">Score Chart</h3>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <div class="grid md:grid-cols-4 gap-4 min-w-[320px]">
+                            <div class="md:col-span-3">
+                                <div class="chart-container w-full max-w-full">
+                                    <canvas id="scoreChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="md:col-span-1">
+                                <div id="chartTotals" class="space-y-2">
+                                    <!-- Totals will be populated by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Score Entry -->
+                <div class="bg-card border rounded-md sm:rounded-lg p-2 sm:p-6 w-full max-w-full">
+                    <div class="flex items-center space-x-2 mb-4">
+                        <i data-lucide="plus" class="w-5 h-5 text-primary"></i>
+                        <h3 class="text-lg font-semibold">Enter Scores</h3>
+                    </div>
+                    
+                    <!-- CTA for adding scores -->
+                    <div class="mb-4 p-3 bg-blue-100 text-blue-900 rounded-md text-center font-medium shadow-sm">
+                        Ready for the next round? Enter each player’s score below and keep the game rolling!
+                    </div>
+                    
+                    <div id="scoreInputForm" class="space-y-4">
+                        <!-- Score inputs will be populated by JavaScript -->
+                    </div>
+                    
+                    <button onclick="submitScores()" class="w-full bg-green-600 text-white hover:bg-green-700 px-4 py-2 rounded-md font-medium transition-colors mt-4">
+                        Submit Scores
                     </button>
                 </div>
+
+                <!-- Score Table -->
+                <div class="bg-card border rounded-md sm:rounded-lg p-2 sm:p-6 w-full max-w-full">
+                    <div class="flex items-center space-x-2 mb-4">
+                        <i data-lucide="table" class="w-5 h-5 text-primary"></i>
+                        <h3 class="text-lg font-semibold">Score Table</h3>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table id="scoreTable" class="w-full min-w-[400px]">
+                            <thead>
+                                <tr class="border-b">
+                                    <th class="text-left p-3 font-medium">Player</th>
+                                    <!-- Round headers will be populated by JavaScript -->
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Score rows will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Add Player Section (moved to bottom) -->
+                <div class="bg-card border rounded-md sm:rounded-lg p-2 sm:p-6 w-full max-w-full">
+                    <button onclick="toggleAddPlayerSection()" class="flex items-center justify-between w-full text-left">
+                        <div class="flex items-center space-x-2">
+                            <i data-lucide="user-plus" class="w-5 h-5 text-primary"></i>
+                            <h3 class="text-lg font-semibold">Add Another Player</h3>
+                        </div>
+                        <i data-lucide="chevron-down" class="w-5 h-5 transition-transform" id="addPlayerToggle"></i>
+                    </button>
+                    <div id="addPlayerContent" class="toggle-content mt-4">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Player Name</label>
+                                <input type="text" id="addPlayerName" placeholder="Enter player name" 
+                                       class="w-full px-3 py-2 border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Train Color</label>
+                                <div id="addPlayerColorGrid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                                    <!-- Color options will be populated by JavaScript -->
+                                </div>
+                            </div>
+                            <button onclick="addPlayer()" class="w-full bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-md font-medium transition-colors">
+                                Add Player
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
+        </main>
 
-            <!-- Score Input -->
-            <div class="card">
-                <div class="section-header">
-                    <i class="fas fa-gamepad"></i>
-                    <h2>Round <span id="currentRound">1</span> Scores</h2>
-                </div>
-                <p style="margin-bottom: 16px; color: #6b7280;">Enter scores for each player (lower is better in Mexican Train!)</p>
-                <div id="scoreInputs"></div>
-                <button class="btn btn-success" onclick="submitScores()">
-                    <i class="fas fa-check"></i>
-                    Submit Round Scores
-                </button>
-            </div>
-
-            <!-- Chart -->
-            <div class="card">
-                <div class="section-header">
-                    <i class="fas fa-chart-bar"></i>
-                    <h2>Score Chart</h2>
-                </div>
-                <div class="chart-container">
-                    <canvas id="scoreChart"></canvas>
-                </div>
-            </div>
-
-            <!-- Score Table -->
-            <div class="card">
-                <div class="section-header">
-                    <i class="fas fa-table"></i>
-                    <h2>Score Table</h2>
-                </div>
-                <div class="table-container">
-                    <table id="scoreTable" class="score-table">
-                        <thead>
-                            <tr>
-                                <th>Round</th>
-                                <!-- Player headers will be populated dynamically -->
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Rows will be populated dynamically -->
-                        </tbody>
-                        <tfoot>
-                            <tr class="total-row">
-                                <td><strong>Total</strong></td>
-                                <!-- Total scores will be populated dynamically -->
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-            </div>
-
-
+        <!-- Messages -->
+        <div id="messages" class="fixed top-4 right-4 space-y-2 z-50">
+            <!-- Messages will be populated by JavaScript -->
         </div>
     </div>
 
-    <!-- Version Footer -->
-    <div class="version-footer" id="versionFooter">
-        v<span id="versionHash">dev</span>
-    </div>
-
+    <!-- Database Operations -->
+    <script src="database.js"></script>
     <!-- Chart.js for score visualization -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Custom JavaScript -->
     <script src="script.js"></script>
+    
 </body>
 </html> 
