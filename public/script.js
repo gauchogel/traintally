@@ -1,7 +1,9 @@
+import { createClient } from '@supabase/supabase-js';
+
 // Supabase client setup
 const SUPABASE_URL = 'https://bnlnhxrtiyfdsihtanoj.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJubG5oeHJ0aXlmZHNpaHRhbm9qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5ODUzMjksImV4cCI6MjA2ODU2MTMyOX0.RzSHQFkpCDgvwgaZhJsxP2Q5ipyITT5p3-XVotQo47Q';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Game state
 let currentGame = null;
@@ -176,27 +178,25 @@ function setupColorSelection() {
     });
 }
 
+// 1. Use id as the primary key everywhere and always use .select().single() after insert
 async function createGame() {
     try {
         const gameId = Math.random().toString(36).substring(2, 8).toUpperCase();
         const now = new Date().toISOString();
-        // Create game in database with all required fields
-        await supabase.from('games').insert({
-            game_id: gameId,
-            name: 'New Game',
-            created_at: now,
-            updated_at: now,
-            is_active: true
-        });
-        currentGame = {
-            game_id: gameId,
-            name: 'New Game',
-            players: [],
-            rounds: [],
-            createdAt: now,
-            updatedAt: now,
-            isActive: true
-        };
+        const { data, error } = await supabase
+            .from('games')
+            .insert({
+                id: gameId,
+                name: 'New Game',
+                created_at: now,
+                updated_at: now,
+                is_active: true
+            })
+            .select()
+            .single();
+        if (error) throw error;
+        currentGame = data;
+        subscribeToGameUpdates(currentGame.id);
         showGameSetup();
         showMessage('Game created successfully!', 'success');
     } catch (error) {
@@ -351,15 +351,14 @@ async function addPlayer() {
     }
 }
 
+// 3. Update submitScores to use normalized round_scores table
 async function submitScores() {
     if (!currentGame) {
         showMessage('No game found', 'error');
         return;
     }
-    
     const roundNumber = currentGame.rounds.length + 1;
     const scores = [];
-    
     currentGame.players.forEach(player => {
         const scoreInput = document.getElementById(`score-${player.id}`);
         const score = parseInt(scoreInput.value) || 0;
@@ -369,17 +368,14 @@ async function submitScores() {
             score: score
         });
     });
-    
-    // Add round
+    // Add round to local state
     const round = {
         roundNumber: roundNumber,
         scores: scores,
         timestamp: new Date().toISOString()
     };
-    
     currentGame.rounds.push(round);
-    
-    // Update player scores
+    // Update player scores in local state
     scores.forEach(scoreEntry => {
         const player = currentGame.players.find(p => p.id === scoreEntry.playerId);
         if (player) {
@@ -387,22 +383,20 @@ async function submitScores() {
             player.scores.push(scoreEntry.score);
         }
     });
-    
-    // Submit scores to database
+    // Insert into normalized round_scores table
     try {
-        await supabase.from('rounds').insert({
+        const rows = scores.map(scoreEntry => ({
             game_id: currentGame.id,
             round_number: roundNumber,
-            scores: JSON.stringify(scores),
-            timestamp: new Date().toISOString()
-        });
-        
+            player_id: scoreEntry.playerId,
+            score: scoreEntry.score
+        }));
+        await supabase.from('round_scores').insert(rows).select();
         // Clear form
         currentGame.players.forEach(player => {
             const scoreInput = document.getElementById(`score-${player.id}`);
             if (scoreInput) scoreInput.value = '';
         });
-        
         updateScoreChart();
         updateScoreTable();
         showMessage(`Round ${roundNumber} scores submitted!`, 'success');
@@ -418,7 +412,7 @@ function showGameSetup() {
     document.getElementById('gameInterface').style.display = 'none';
     
     // Auto-fill game ID
-    document.getElementById('setupGameId').value = currentGame.id;
+    document.getElementById('setupGameId').value = currentGame.game_id;
     
     // Update available colors and set up event listeners
     updateSetupColorSelect();
@@ -433,7 +427,7 @@ function showGameInterface() {
     document.getElementById('gameInterface').style.display = 'block';
     
     // Update game ID display
-    document.getElementById('gameIdDisplay').textContent = currentGame.id;
+    document.getElementById('gameIdDisplay').textContent = currentGame.game_id;
     
     // Update forms and charts
     updateScoreInputForm();
@@ -769,7 +763,8 @@ function updateScoreTable() {
     thead.appendChild(headerRow);
 
     // --- Body rows: one per round ---
-    const numRounds = 13;
+    const doubles = [12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
+    const numRounds = doubles.length;
     for (let roundNumber = 1; roundNumber <= numRounds; roundNumber++) {
         const row = document.createElement('tr');
         row.className = 'border-b';
@@ -935,6 +930,8 @@ function loadGame(gameId) {
         currentGame = JSON.parse(gameData);
         return true;
     }
+    // If not found in localStorage, try loading from the database
+    loadGameFromDatabase(gameId);
     return false;
 }
 
@@ -1052,6 +1049,21 @@ function cycleTheme() {
     themeToggle.addEventListener('click', cycleTheme);
   }
 })(); 
+
+// 2. Add Supabase Realtime subscription for game updates
+function subscribeToGameUpdates(gameId) {
+    if (gameSubscription) {
+        gameSubscription.unsubscribe();
+    }
+    gameSubscription = supabase.channel(`public:games:id=eq.${gameId}`)
+        .on('postgres_changes', {
+            event: '*',
+            schema: 'public',
+            table: 'games',
+            filter: `id=eq.${gameId}`
+        }, ({ new: g }) => handleGameUpdate(g))
+        .subscribe();
+}
 
 // --- Dynamic Player List for Game Setup ---
 function renderPlayerRows() {
