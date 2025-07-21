@@ -1,15 +1,1 @@
-name = "tally-train"
-main = "src/index.js"
-compatibility_date = "2024-01-15"
-
-[durable_objects]
-bindings = [
-  { name = "GAME_STORAGE", class_name = "GameStorage" }
-]
-
-[[migrations]]
-tag = "v1"
-new_sqlite_classes = ["GameStorage"]
-
-[assets]
-directory = "./public" 
+# No longer needed for pure frontend deployment. You can delete this file or leave it empty if not using Wrangler. 

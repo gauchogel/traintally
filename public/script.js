@@ -1,3 +1,8 @@
+// Supabase client setup
+const SUPABASE_URL = 'https://bnlnhxrtiyfdsihtanoj.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJubG5oeHJ0aXlmZHNpaHRhbm9qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5ODUzMjksImV4cCI6MjA2ODU2MTMyOX0.RzSHQFkpCDgvwgaZhJsxP2Q5ipyITT5p3-XVotQo47Q';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
 // Game state
 let currentGame = null;
 let currentPlayer = null;
@@ -176,7 +181,10 @@ async function createGame() {
         const gameId = Math.random().toString(36).substring(2, 8).toUpperCase();
         
         // Create game in database
-        await window.database.createGame(gameId);
+        await supabase.from('games').insert({
+            id: gameId,
+            created_at: new Date().toISOString()
+        });
         
         currentGame = {
             id: gameId,
@@ -203,10 +211,20 @@ async function joinExistingGame() {
         }
         
         // Load game from database
-        const game = await window.database.loadGame(gameId);
+        const { data, error } = await supabase
+            .from('games')
+            .select('*')
+            .eq('id', gameId)
+            .single();
+
+        if (error) {
+            console.error('Error loading game:', error);
+            showMessage('Failed to load game. Please try again.', 'error');
+            return;
+        }
         
-        if (game) {
-            currentGame = game;
+        if (data) {
+            currentGame = data;
             showGameSetup();
             showMessage('Game loaded successfully!', 'success');
         } else {
@@ -305,7 +323,12 @@ async function addPlayer() {
     
     // Add player to database
     try {
-        await window.database.addPlayer(currentGame.id, playerName, trainColor, true);
+        await supabase.from('players').insert({
+            game_id: currentGame.id,
+            name: playerName,
+            train_color: trainColor,
+            is_offline: true
+        });
         
         // Clear form
         document.getElementById('addPlayerName').value = '';
@@ -363,7 +386,12 @@ async function submitScores() {
     
     // Submit scores to database
     try {
-        await window.database.submitScores(currentGame.id, roundNumber, scores);
+        await supabase.from('rounds').insert({
+            game_id: currentGame.id,
+            round_number: roundNumber,
+            scores: JSON.stringify(scores),
+            timestamp: new Date().toISOString()
+        });
         
         // Clear form
         currentGame.players.forEach(player => {
@@ -414,9 +442,19 @@ function showGameInterface() {
 
 async function loadGameFromDatabase(gameId) {
     try {
-        const game = await window.database.loadGame(gameId);
-        if (game) {
-            currentGame = game;
+        const { data, error } = await supabase
+            .from('games')
+            .select('*')
+            .eq('id', gameId)
+            .single();
+
+        if (error) {
+            console.error('Error reloading game:', error);
+            return;
+        }
+
+        if (data) {
+            currentGame = data;
             updateScoreInputForm();
             updateScoreChart();
             updateAddPlayerColors();
