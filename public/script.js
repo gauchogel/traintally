@@ -179,20 +179,24 @@ function setupColorSelection() {
 async function createGame() {
     try {
         const gameId = Math.random().toString(36).substring(2, 8).toUpperCase();
-        
-        // Create game in database
+        const now = new Date().toISOString();
+        // Create game in database with all required fields
         await supabase.from('games').insert({
-            id: gameId,
-            created_at: new Date().toISOString()
+            game_id: gameId,
+            name: 'New Game',
+            created_at: now,
+            updated_at: now,
+            is_active: true
         });
-        
         currentGame = {
-            id: gameId,
+            game_id: gameId,
+            name: 'New Game',
             players: [],
             rounds: [],
-            createdAt: new Date().toISOString()
+            createdAt: now,
+            updatedAt: now,
+            isActive: true
         };
-        
         showGameSetup();
         showMessage('Game created successfully!', 'success');
     } catch (error) {
